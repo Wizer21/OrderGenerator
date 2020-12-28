@@ -1,16 +1,25 @@
-# This is a sample Python script.
+from PySide2.QtWidgets import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+import sys
+from Main_gui import *
 
-# Press Maj+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
+    lDesktopScreen = app.primaryScreen()
+    lScreenGeom = lDesktopScreen.availableGeometry()
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+    rec = QRect(lScreenGeom)
+    resolution = [rec.width(), rec.height()]
+    main_gui = Main_gui()
 
+    pixelsize = "QWidget{ font-size:" + str(int(resolution[0] / 90)) + "px;}"
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+    with open(".\\files\\theme.qss") as my_file:
+        theme = my_file.read()
+        app.setStyleSheet(theme + pixelsize)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    main_gui.show()
+
+    sys.exit(app.exec_())
