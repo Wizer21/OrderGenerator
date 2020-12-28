@@ -14,7 +14,7 @@ if __name__ == "__main__":
     resolution = [rec.width(), rec.height()]
     main_gui = Main_gui()
 
-    pixelsize = "QWidget{ font-size:" + str(int(resolution[0] / 90)) + "px;}"
+    pixelsize = "QWidget{ font-size:" + str(int(resolution[0] / 110)) + "px;}"
 
     with open(".\\files\\theme.qss") as my_file:
         theme = my_file.read()

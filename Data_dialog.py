@@ -2,12 +2,20 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 
+
+class Connection(QObject):
+    send_table = Signal(dict)
+
+
 class Data_dialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
+        self.messager = Connection()
         self.add_new_items = True
         self.list_combobox = []
         self.table = [[]]
+        self.update_clip = True
+
 
         # self.widget_main = QWidget(self)
         self.layout_main = QGridLayout(self)
@@ -15,11 +23,13 @@ class Data_dialog(QDialog):
         self.button_add_clear = QPushButton("Add", self)
         self.button_push = QPushButton("Push Data", self)
         self.button_paste = QPushButton("Paste table from clipboard")
+        self.label_text_clipboard = QLabel("Your Clipboard", self)
+        self.rich_clipboard = QTextEdit(self)
 
         self.table_import_view = QTableWidget(self)
 
         self.build()
-        self.resize(1000, 1000)
+        self.resize(1200, 700)
 
 
     def build(self):
@@ -29,7 +39,9 @@ class Data_dialog(QDialog):
         self.layout_main.addWidget(self.label_new_item, 0, 0)
         self.layout_main.addWidget(self.button_add_clear, 1, 0)
         self.layout_main.addWidget(self.button_push, 0, 1, 2, 1)
-        self.layout_main.addWidget(self.button_paste, 2, 0, 2, 2)
+        self.layout_main.addWidget(self.label_text_clipboard, 2, 0)
+        self.layout_main.addWidget(self.button_paste, 2, 1, 2, 1)
+        self.layout_main.addWidget(self.rich_clipboard, 3, 0)
 
         # WIDGETS PARAMETERS
         self.layout_main.setRowStretch(0, 0)
@@ -51,8 +63,15 @@ class Data_dialog(QDialog):
             return
         else:
             self.layout_main.removeWidget(self.button_paste)
+            self.layout_main.removeWidget(self.label_text_clipboard)
+            self.layout_main.removeWidget(self.rich_clipboard)
             self.button_paste.setVisible(False)
+            self.label_text_clipboard.setVisible(False)
+            self.rich_clipboard.setVisible(False)
             del self.button_paste
+            del self.label_text_clipboard
+            del self.rich_clipboard
+            self.update_clip = False
 
             self.layout_main.addWidget(self.table_import_view, 2, 0, 2, 2)
             self.table_import_view.setVisible(True)
@@ -83,10 +102,12 @@ class Data_dialog(QDialog):
 
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
             combo = QComboBox(self)
-            combo.addItems(["Delete", "Name", "Stock", "Reference"])
+            combo.addItems(["Delete", "Name", "Reference", "Sells", "Stock"])
 
             self.table_import_view.setCellWidget(0, i, combo)
             self.list_combobox.append(combo)
+
+        self.list_combobox[0].setCurrentIndex(1)
 
         for i in range(len(self.table)):  # PUSH DATA
             for y in range(len(self.table[i])):
@@ -97,31 +118,53 @@ class Data_dialog(QDialog):
 
     @Slot()
     def push_button_clicked(self):
+        name_count = 0  # Check if there is not only one column 'Name'
+        for i in range(len(self.list_combobox)):
+            if self.list_combobox[i].currentText() == "Name":
+                name_count += 1
+                continue
+        if name_count != 1:
+            print("Need a column name")
+            return
+
         final_data = {
             "Name": [],
-            "Stock": [],
+            "Sells": [],
             "Reference": []
         }
 
-        my_list = []
-
         for i in range(len(self.list_combobox)):
-
             if self.list_combobox[i].currentText() == "Name":
-                my_list.clear()
+                my_list = []
                 for y in self.table:
-                    my_list.append(self.table[y][i])
+                    my_list.append(y[i])
                 final_data["Name"].append(my_list)
 
-            if self.list_combobox[i].currentText() == "Stock":
-                my_list.clear()
+            if self.list_combobox[i].currentText() == "Sells":
+                my_list = []
                 for y in self.table:
-                    my_list.append(self.table[y][i])
-                final_data["Stock"].append(my_list)
+                    my_list.append(y[i])
+                final_data["Sells"].append(my_list)
+
+            if self.list_combobox[i].currentText() == "Reference":
+                my_list = []
+                for y in self.table:
+                    my_list.append(y[i])
+                final_data["Reference"].append(my_list)
+
+        self.messager.send_table.emit(final_data)
+        self.close()
 
 
+    def enterEvent(self, event):
+        if self.update_clip:
+            self.update_clipboard()
 
 
+    def update_clipboard(self):
+        clipboard = QGuiApplication.clipboard()
+        mime_data = clipboard.mimeData()
+        self.rich_clipboard.setText(mime_data.text())
 
 
 
