@@ -16,8 +16,6 @@ class Data_dialog(QDialog):
         self.table = [[]]
         self.update_clip = True
 
-
-        # self.widget_main = QWidget(self)
         self.layout_main = QGridLayout(self)
         self.label_new_item = QLabel("New Items:", self)
         self.button_add_clear = QPushButton("Add", self)
@@ -44,14 +42,19 @@ class Data_dialog(QDialog):
         self.layout_main.addWidget(self.rich_clipboard, 3, 0)
 
         # WIDGETS PARAMETERS
+        self.setWindowTitle("Import Table")
         self.layout_main.setRowStretch(0, 0)
         self.layout_main.setRowStretch(1, 1)
         self.button_push.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_paste.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.table_import_view.setVisible(False)
+        self.button_add_clear.setCursor(Qt.PointingHandCursor)
+        self.button_push.setCursor(Qt.PointingHandCursor)
+        self.button_paste.setCursor(Qt.PointingHandCursor)
 
         self.button_paste.clicked.connect(self.import_clicked)
         self.button_push.clicked.connect(self.push_button_clicked)
+        self.button_add_clear.clicked.connect(self.add_items_clicked)
 
     @Slot()
     def import_clicked(self):
@@ -102,9 +105,13 @@ class Data_dialog(QDialog):
 
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
             combo = QComboBox(self)
-            combo.addItems(["Delete", "Name", "Reference", "Sells", "Stock"])
+            combo.addItems(["Skip", "Name", "Reference", "Sells", "Stock"])
 
             self.table_import_view.setCellWidget(0, i, combo)
+            combo.setCursor(Qt.PointingHandCursor)
+            combo.setObjectName(str(i))
+
+            combo.textActivated.connect(self.combo_top_changed)
             self.list_combobox.append(combo)
 
         self.list_combobox[0].setCurrentIndex(1)
@@ -130,7 +137,8 @@ class Data_dialog(QDialog):
         final_data = {
             "Name": [],
             "Sells": [],
-            "Reference": []
+            "Reference": [],
+            "Add Items": self.add_new_items
         }
 
         for i in range(len(self.list_combobox)):
@@ -167,4 +175,29 @@ class Data_dialog(QDialog):
         self.rich_clipboard.setText(mime_data.text())
 
 
+    def add_items_clicked(self):
+        if self.add_new_items:
+            self.add_new_items = False
+            self.button_add_clear.setText("Skip")
+        else:
+            self.add_new_items = True
+            self.button_add_clear.setText("Add")
+
+
+    # @Slot(str)  # SLOT BLOCK OBJECT NAME ???
+    def combo_top_changed(self, combo_text):
+        sender_id = self.sender().objectName()
+
+        for i in range(len(self.list_combobox)):
+            if sender_id == self.list_combobox[i].objectName():
+                continue
+            if self.list_combobox[i].currentText() == "Name" and combo_text == "Name":
+                self.list_combobox[i].setCurrentText("Skip")
+                has_name = True
+                return
+            if self.list_combobox[i].currentText() == "Stock" and combo_text == "Stock":
+
+                self.list_combobox[i].setCurrentText("Skip")
+                has_stock = True
+                return
 

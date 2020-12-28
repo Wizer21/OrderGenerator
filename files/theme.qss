@@ -53,10 +53,10 @@ QScrollBar::handle::pressed {
     background-color: white;
 }
 QScrollBar::vertical {
-    width: 10px;
+    width: 17px;
 }
 QScrollBar::horizontal {
-    height: 10px;
+    height: 17px;
 }
 /* ------------------------------ */
 /* ---------- SLIDER ------- */

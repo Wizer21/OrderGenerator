@@ -27,6 +27,7 @@ class Main_gui(QMainWindow):
 
 
     def build(self):
+        # STRUCTURE
         self.setCentralWidget(self.widget_main)
         self.widget_main.setLayout(self.layout_main)
 
@@ -39,7 +40,10 @@ class Main_gui(QMainWindow):
 
         self.layout_main.addWidget(self.table_widget_main, 1, 0)
 
+        # WIDGETS PARAMETERS
         self.button_import_data.clicked.connect(self.import_data_clicked)
+        self.button_import_data.setCursor(Qt.PointingHandCursor)
+        self.button_generate_mail.setCursor(Qt.PointingHandCursor)
 
 
     @Slot()
@@ -51,7 +55,7 @@ class Main_gui(QMainWindow):
 
     @Slot()
     def apply_new_list(self, new_dict):
-        push_if_new_item = True
+        push_if_new_item = new_dict["Add Items"]
         names = new_dict["Name"][0]
         lists = new_dict["Sells"]
 
