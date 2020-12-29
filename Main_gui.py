@@ -5,10 +5,12 @@ from Data_dialog import *
 from Item import *
 from TableWidget import *
 from Settings import *
+import json
 
 class Main_gui(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
+        self.current_table = "Default"
         self.item_list = []
         self.month_count = 0
         self.sustain_value = 2
@@ -42,6 +44,7 @@ class Main_gui(QMainWindow):
         self.table_widget_main = QTableWidget(self)
 
         self.build()
+        self.load_files()
 
 
     def build(self):
@@ -81,6 +84,7 @@ class Main_gui(QMainWindow):
         self.button_import_data.clicked.connect(self.import_data_clicked)
         self.line_edit_sustain.textEdited.connect(self.apply_new_sustain_value)
         self.line_edit_base_month.textEdited.connect(self.apply_new_base_value)
+
 
     @Slot()
     def import_data_clicked(self):
@@ -139,6 +143,8 @@ class Main_gui(QMainWindow):
 
         self.month_count += added_months
         self.build_table()
+        self.calc_order()
+        self.save_table()
 
 
     def build_table(self):
@@ -183,8 +189,6 @@ class Main_gui(QMainWindow):
         self.table_widget_main.setHorizontalHeaderLabels(headers)
         self.table_widget_main.resizeColumnsToContents()
 
-        self.calc_order()
-
 
     def calc_order(self):
         calc_month = self.used_month
@@ -218,6 +222,7 @@ class Main_gui(QMainWindow):
                 value = TableWidgetItem(str(average))
 
             value.setBackgroundColor(QColor(self.color_dict["Average"]))
+            value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
             self.table_widget_main.setItem(i, pos_column_average - 1, value)
 
             if 0 < to_buy < 1:
@@ -233,7 +238,9 @@ class Main_gui(QMainWindow):
                 value = TableWidgetItem(str(to_buy))
 
             value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
+            value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
             self.table_widget_main.setItem(i, pos_column_average, value)
+            self.table_widget_main.resizeColumnsToContents()
 
 
     @Slot(str)
@@ -245,6 +252,7 @@ class Main_gui(QMainWindow):
 
         if len(self.item_list) != 0:
             self.build_table()
+            self.calc_order()
 
 
     @Slot(str)
@@ -256,8 +264,81 @@ class Main_gui(QMainWindow):
 
         if len(self.item_list) != 0:
             self.build_table()
+            self.calc_order()
 
     @Slot()
     def open_options(self):
         sett = Settings()
         sett.exec_()
+
+
+    def load_files(self):
+        try:
+            with open(".\\files\\settings.json", "r") as data_json:
+                settings = json.load(data_json)
+                self.current_table = settings["lasttable"]
+                self.month_count = settings["monthcount"]
+                self.sustain_value = settings["sustain"]
+                self.used_month = settings["usedmonth"]
+        except FileNotFoundError:
+            settings = {
+                "lasttable": self.current_table,
+                "monthcount": self.month_count,
+                "sustain": self.sustain_value,
+                "usedmonth": self.used_month
+            }
+            with open(".\\files\\settings.json", "w") as data_json:
+                json.dump(settings, data_json)
+
+        try:
+            with open(".\\files\\tables.json", "r") as data_json:
+                tables = json.load(data_json)
+
+                for key in tables[self.current_table]:
+                    item = Item(key, 0)
+                    item.sells_history = tables[self.current_table][key]["sells"]
+                    item.stock = tables[self.current_table][key]["stock"]
+                    self.item_list.append(item)
+
+                self.build_table()
+                self.calc_order()
+
+        except FileNotFoundError:
+            items = {
+            }
+            tables = {
+                "Default": items
+            }
+            with open(".\\files\\tables.json", "w") as data_json:
+                json.dump(tables, data_json)
+
+
+    def save_table(self):
+        with open(".\\files\\tables.json", "r") as data_json:
+            tables = json.load(data_json)
+
+        for i in range(len(self.item_list)):
+            new_dict = {
+                "sells": self.item_list[i].sells_history,
+                "stock": self.item_list[i].stock
+            }
+            tables[self.current_table][self.item_list[i].name] = new_dict
+
+        with open(".\\files\\tables.json", "w") as data_json:
+            json.dump(tables, data_json)
+
+
+    def save_settings(self):
+        settings = {
+            "lasttable": self.current_table,
+            "monthcount": self.month_count,
+            "sustain": self.sustain_value,
+            "usedmonth": self.used_month
+        }
+        with open(".\\files\\settings.json", "w") as data_json:
+            json.dump(settings, data_json)
+
+
+    def closeEvent(self, event):
+        self.save_settings()
+        self.save_table()
