@@ -4,6 +4,7 @@ from PySide2.QtGui import *
 from Data_dialog import *
 from Item import *
 from TableWidget import *
+from Settings import *
 
 class Main_gui(QMainWindow):
     def __init__(self):
@@ -11,16 +12,32 @@ class Main_gui(QMainWindow):
         self.item_list = []
         self.month_count = 0
         self.sustain_value = 2
+        self.used_month = 6
+        self.color_dict = {
+            "Name": "#2A363B",
+            "Sells": "#E84A5F",
+            "Reference": "",
+            "Stock": "#FF847C",
+            "Average": "#FECEA8",
+            "ToBuy": "#99B989"
+        }
+
+        self.menubar_main = QMenuBar(self)
+        self.action_options = QAction("Options")
 
         self.widget_main = QWidget(self)
         self.layout_main = QGridLayout(self)
 
-        self.layout_top_panel = QHBoxLayout(self)
+        self.layout_top_panel = QGridLayout(self)
         self.label_selected_profile = QLabel("Test Profile", self)
-        self.button_import_data = QPushButton("Import Data", self)
-        self.button_generate_mail = QPushButton("Generate Mail", self)
-        self.label_sustain_wanted = QLabel("Sustain - Months", self)
+        self.button_import_data = QPushButton("Import\nData", self)
+        self.button_generate_mail = QPushButton("Generate\nMail", self)
+        self.label_sustain_wanted = QLabel("Buy for ", self)
+        self.label_based_month = QLabel("Based on last ", self)
         self.line_edit_sustain = QLineEdit(str(self.sustain_value), self)
+        self.line_edit_base_month = QLineEdit(str(self.used_month), self)
+        self.label_sustain_step = QLabel("month", self)
+        self.label_based_step = QLabel("month", self)
 
         self.table_widget_main = QTableWidget(self)
 
@@ -29,15 +46,22 @@ class Main_gui(QMainWindow):
 
     def build(self):
         # STRUCTURE
+        self.setMenuBar(self.menubar_main)
+        self.menubar_main.addAction(self.action_options)
+
         self.setCentralWidget(self.widget_main)
         self.widget_main.setLayout(self.layout_main)
 
         self.layout_main.addLayout(self.layout_top_panel, 0, 0)
-        self.layout_top_panel.addWidget(self.label_selected_profile)
-        self.layout_top_panel.addWidget(self.button_import_data)
-        self.layout_top_panel.addWidget(self.button_generate_mail)
-        self.layout_top_panel.addWidget(self.label_sustain_wanted)
-        self.layout_top_panel.addWidget(self.line_edit_sustain)
+        self.layout_top_panel.addWidget(self.label_selected_profile, 0, 0, 2, 1)
+        self.layout_top_panel.addWidget(self.button_import_data, 0, 1, 2, 1)
+        self.layout_top_panel.addWidget(self.button_generate_mail, 0, 2, 2, 1)
+        self.layout_top_panel.addWidget(self.label_sustain_wanted, 0, 3, 1, 1, Qt.AlignRight)
+        self.layout_top_panel.addWidget(self.line_edit_sustain, 0, 4, 1, 1)
+        self.layout_top_panel.addWidget(self.label_sustain_step, 0, 5, 1, 1)
+        self.layout_top_panel.addWidget(self.label_based_month, 1, 3, 1, 1, Qt.AlignRight)
+        self.layout_top_panel.addWidget(self.line_edit_base_month, 1, 4, 1, 1)
+        self.layout_top_panel.addWidget(self.label_based_step, 1, 5, 1, 1)
 
         self.layout_main.addWidget(self.table_widget_main, 1, 0)
 
@@ -45,10 +69,18 @@ class Main_gui(QMainWindow):
         self.table_widget_main.setSortingEnabled(True)
         self.button_import_data.setCursor(Qt.PointingHandCursor)
         self.button_generate_mail.setCursor(Qt.PointingHandCursor)
+        self.button_import_data.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.button_generate_mail.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        reg_exp = QRegExpValidator("[+-]?([0-9]*[.])?[0-9]+")
+        self.line_edit_sustain.setValidator(reg_exp)
+        int_only = QIntValidator()
+        self.line_edit_base_month.setValidator(int_only)
+
+        self.action_options.triggered.connect(self.open_options)
         self.button_import_data.clicked.connect(self.import_data_clicked)
         self.line_edit_sustain.textEdited.connect(self.apply_new_sustain_value)
-
+        self.line_edit_base_month.textEdited.connect(self.apply_new_base_value)
 
     @Slot()
     def import_data_clicked(self):
@@ -119,6 +151,7 @@ class Main_gui(QMainWindow):
         for i in range(len(self.item_list)):  # EVERY ROW
             name = QTableWidgetItem(self.item_list[i].name)
             name.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+            name.setBackgroundColor(QColor(self.color_dict["Name"]))
 
             self.table_widget_main.setItem(i, 0, name)  # FILL NAME COLUMN
             column = 1
@@ -130,11 +163,14 @@ class Main_gui(QMainWindow):
                 else:
                     sells = TableWidgetItem(str(val))
 
+                sells.setBackgroundColor(QColor(self.color_dict["Sells"]))
                 sells.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
                 self.table_widget_main.setItem(i, column, sells)
                 column += 1
 
             stock = TableWidgetItem(str(self.item_list[i].stock))  # FILL STOCK COLUMN
+
+            stock.setBackgroundColor(QColor(self.color_dict["Stock"]))
             stock.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
             self.table_widget_main.setItem(i, column, stock)
 
@@ -151,14 +187,15 @@ class Main_gui(QMainWindow):
 
 
     def calc_order(self):
-        calc_month = 6
+        calc_month = self.used_month
         pos_column_average = self.table_widget_main.columnCount() - 1
 
         if self.month_count < calc_month:
             calc_month = self.month_count
 
         for i in range(len(self.item_list)):
-            my_list = self.item_list[i].sells_history
+            my_list = self.item_list[i].sells_history.copy()
+            my_list.reverse()
             average = 0
 
             for y in range(0, calc_month):
@@ -179,6 +216,8 @@ class Main_gui(QMainWindow):
                 value = QTableWidgetItem(str(average))
             else:
                 value = TableWidgetItem(str(average))
+
+            value.setBackgroundColor(QColor(self.color_dict["Average"]))
             self.table_widget_main.setItem(i, pos_column_average - 1, value)
 
             if 0 < to_buy < 1:
@@ -192,6 +231,8 @@ class Main_gui(QMainWindow):
                 value = QTableWidgetItem(str(to_buy))
             else:
                 value = TableWidgetItem(str(to_buy))
+
+            value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
             self.table_widget_main.setItem(i, pos_column_average, value)
 
 
@@ -201,4 +242,22 @@ class Main_gui(QMainWindow):
             self.sustain_value = 0
         else:
             self.sustain_value = float(str_value)
-        self.build_table()
+
+        if len(self.item_list) != 0:
+            self.build_table()
+
+
+    @Slot(str)
+    def apply_new_base_value(self, value):
+        if value == "" or value == "0":
+            self.used_month = 1
+        else:
+            self.used_month = int(value)
+
+        if len(self.item_list) != 0:
+            self.build_table()
+
+    @Slot()
+    def open_options(self):
+        sett = Settings()
+        sett.exec_()

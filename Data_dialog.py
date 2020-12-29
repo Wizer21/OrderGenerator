@@ -121,6 +121,7 @@ class Data_dialog(QDialog):
         for i in range(len(self.table)):  # PUSH DATA
             for y in range(len(self.table[i])):
                 item = QTableWidgetItem(self.table[i][y])
+                item.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
 
                 self.table_import_view.setItem(i + 1, y, item)
 
