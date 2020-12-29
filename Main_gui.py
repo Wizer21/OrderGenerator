@@ -23,6 +23,7 @@ class Main_gui(QMainWindow):
             "Average": "#FECEA8",
             "ToBuy": "#99B989"
         }
+        self.settings_changed = False
 
         self.menubar_main = QMenuBar(self)
         self.action_options = QAction("Options")
@@ -189,7 +190,6 @@ class Main_gui(QMainWindow):
         self.table_widget_main.setHorizontalHeaderLabels(headers)
         self.table_widget_main.resizeColumnsToContents()
 
-
     def calc_order(self):
         calc_month = self.used_month
         pos_column_average = self.table_widget_main.columnCount() - 1
@@ -242,7 +242,6 @@ class Main_gui(QMainWindow):
             self.table_widget_main.setItem(i, pos_column_average, value)
             self.table_widget_main.resizeColumnsToContents()
 
-
     @Slot(str)
     def apply_new_sustain_value(self, str_value):
         if str_value == "":
@@ -253,7 +252,6 @@ class Main_gui(QMainWindow):
         if len(self.item_list) != 0:
             self.build_table()
             self.calc_order()
-
 
     @Slot(str)
     def apply_new_base_value(self, value):
@@ -268,9 +266,19 @@ class Main_gui(QMainWindow):
 
     @Slot()
     def open_options(self):
+        self.save_settings()
+        self.save_table()
+
         sett = Settings()
+        sett.messager.new_selected_profile.connect(self.apply_new_profile_selected)
+        sett.messager.profile_created.connect(self.apply_created_profile)
         sett.exec_()
 
+        if self.settings_changed and len(self.item_list) != 0:
+            self.build_table()
+            self.calc_order()
+
+        self.settings_changed = False
 
     def load_files(self):
         try:
@@ -280,6 +288,7 @@ class Main_gui(QMainWindow):
                 self.month_count = settings["monthcount"]
                 self.sustain_value = settings["sustain"]
                 self.used_month = settings["usedmonth"]
+                self.label_selected_profile.setText(self.current_table)
         except FileNotFoundError:
             settings = {
                 "lasttable": self.current_table,
@@ -300,8 +309,9 @@ class Main_gui(QMainWindow):
                     item.stock = tables[self.current_table][key]["stock"]
                     self.item_list.append(item)
 
-                self.build_table()
-                self.calc_order()
+                if len(self.item_list) != 0:
+                    self.build_table()
+                    self.calc_order()
 
         except FileNotFoundError:
             items = {
@@ -311,7 +321,6 @@ class Main_gui(QMainWindow):
             }
             with open(".\\files\\tables.json", "w") as data_json:
                 json.dump(tables, data_json)
-
 
     def save_table(self):
         with open(".\\files\\tables.json", "r") as data_json:
@@ -327,7 +336,6 @@ class Main_gui(QMainWindow):
         with open(".\\files\\tables.json", "w") as data_json:
             json.dump(tables, data_json)
 
-
     def save_settings(self):
         settings = {
             "lasttable": self.current_table,
@@ -338,6 +346,27 @@ class Main_gui(QMainWindow):
         with open(".\\files\\settings.json", "w") as data_json:
             json.dump(settings, data_json)
 
+    @Slot(str)
+    def apply_new_profile_selected(self, new_profile_name):
+        self.current_table = new_profile_name
+        self.label_selected_profile.setText(new_profile_name)
+        self.settings_changed = True
+
+    @Slot(str)
+    def apply_created_profile(self, new_profile_name):
+        self.current_table = new_profile_name
+        self.settings_changed = True
+        self.label_selected_profile.setText(new_profile_name)
+
+        with open(".\\files\\tables.json", "r") as data_json:
+            tables = json.load(data_json)
+
+            items = {
+            }
+            tables[new_profile_name] = items
+
+            with open(".\\files\\tables.json", "w") as data_json:
+                json.dump(tables, data_json)
 
     def closeEvent(self, event):
         self.save_settings()

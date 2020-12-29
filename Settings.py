@@ -1,11 +1,20 @@
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
+import json
+from NewNameDialog import *
+
+
+class Communication(QObject):
+    new_selected_profile = Signal(str)
+    profile_created = Signal(str)
 
 
 class Settings(QDialog):
     def __init__(self):
         QDialog.__init__(self)
+        self.current_table = "Default"
+        self.messager = Communication()
 
         self.layout_main = QGridLayout(self)
         self.label_title = QLabel("Settings", self)
@@ -63,5 +72,40 @@ class Settings(QDialog):
         self.button_delete_mail.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout_right.setAlignment(Qt.AlignTop)
 
+        self.button_new_profile.clicked.connect(self.new_profile_clicked)
+        self.combobox_profiles.textActivated.connect(self.profile_selected)
+
+        self.load_files()
+
+    def load_files(self):
+        with open(".\\files\\settings.json", "r") as data_json:
+            settings = json.load(data_json)
+            self.current_table = settings["lasttable"]
+
+        with open(".\\files\\tables.json", "r") as data_json:
+            tables = json.load(data_json)
+            for key in tables:
+                self.combobox_profiles.addItem(key)
+
+        self.combobox_profiles.setCurrentText(self.current_table)
+
+    @Slot(str)
+    def profile_selected(self, profile_name):
+        self.current_table = profile_name
+        self.messager.new_selected_profile.emit(profile_name)
+
+    @Slot()
+    def new_profile_clicked(self):
+        dialog = NewNameDialog()
+        dialog.messager.name_new_profile.connect(self.apply_new_profile_name)
+        dialog.exec_()
+
+    @Slot(str)
+    def apply_new_profile_name(self, name):
+        self.messager.profile_created.emit(name)
+        self.current_table = name
+
+        self.combobox_profiles.addItem(name)
+        self.combobox_profiles.setCurrentText(name)
 
 
