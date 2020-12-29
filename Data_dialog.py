@@ -138,6 +138,7 @@ class Data_dialog(QDialog):
             "Name": [],
             "Sells": [],
             "Reference": [],
+            "Stock": [],
             "Add Items": self.add_new_items
         }
 
@@ -146,19 +147,25 @@ class Data_dialog(QDialog):
                 my_list = []
                 for y in self.table:
                     my_list.append(y[i])
-                final_data["Name"].append(my_list)
+                final_data["Name"] = my_list
 
-            if self.list_combobox[i].currentText() == "Sells":
+            elif self.list_combobox[i].currentText() == "Sells":
                 my_list = []
                 for y in self.table:
                     my_list.append(y[i])
                 final_data["Sells"].append(my_list)
 
-            if self.list_combobox[i].currentText() == "Reference":
+            elif self.list_combobox[i].currentText() == "Reference":
                 my_list = []
                 for y in self.table:
                     my_list.append(y[i])
                 final_data["Reference"].append(my_list)
+
+            elif self.list_combobox[i].currentText() == "Stock":
+                my_list = []
+                for y in self.table:
+                    my_list.append(y[i])
+                final_data["Stock"] = my_list
 
         self.messager.send_table.emit(final_data)
         self.close()
