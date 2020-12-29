@@ -110,11 +110,13 @@ class Data_dialog(QDialog):
             self.table_import_view.setCellWidget(0, i, combo)
             combo.setCursor(Qt.PointingHandCursor)
             combo.setObjectName(str(i))
+            combo.setCurrentIndex(3)
 
             combo.textActivated.connect(self.combo_top_changed)
             self.list_combobox.append(combo)
 
         self.list_combobox[0].setCurrentIndex(1)
+        self.list_combobox[len(self.list_combobox) - 1].setCurrentIndex(4)
 
         for i in range(len(self.table)):  # PUSH DATA
             for y in range(len(self.table[i])):
@@ -152,7 +154,7 @@ class Data_dialog(QDialog):
             elif self.list_combobox[i].currentText() == "Sells":
                 my_list = []
                 for y in self.table:
-                    my_list.append(y[i])
+                    my_list.append(int(y[i]))
                 final_data["Sells"].append(my_list)
 
             elif self.list_combobox[i].currentText() == "Reference":
@@ -164,7 +166,7 @@ class Data_dialog(QDialog):
             elif self.list_combobox[i].currentText() == "Stock":
                 my_list = []
                 for y in self.table:
-                    my_list.append(y[i])
+                    my_list.append(int(y[i]))
                 final_data["Stock"] = my_list
 
         self.messager.send_table.emit(final_data)
