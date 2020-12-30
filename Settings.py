@@ -75,11 +75,16 @@ class Settings(QDialog):
 
         # WIDGETS PARAMETERS
         self.setWindowTitle("Settings")
+        self.setWindowIcon(Utils.get_pixmap("settings_dark"))
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
         self.setContentsMargins(10, 10, 10, 10)
         self.layout_left.setAlignment(Qt.AlignTop)
         self.layout_right.setAlignment(Qt.AlignTop)
 
         Utils.resize_font(self.label_title, 2)
+        Utils.set_icon(self.button_new_profile, "add_profile", 1)
+        Utils.set_icon(self.button_delete_profile, "trash", 1)
 
         for i in range(len(self.color_list)):
             self.combo_color_reference.addItem("Reference")

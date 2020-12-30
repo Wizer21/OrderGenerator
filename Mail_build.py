@@ -5,8 +5,10 @@ import json
 from NewNameDialog import *
 from Utils import *
 
+
 class Communication(QObject):
     mail_used_changed = Signal(str)
+
 
 class Mail_build(QDialog):
     def __init__(self, new_item_list, new_mail_profile):
@@ -21,7 +23,7 @@ class Mail_build(QDialog):
         self.layout_main = QGridLayout(self)
 
         self.layout_top = QGridLayout(self)
-        self.label_title = QLabel("Mail generator", self)
+        self.label_title = QLabel("Mail", self)
         self.combo_profiles_mail = QComboBox(self)
         self.button_clipboard = QPushButton("Copy to\nclipboard", self)
         self.button_edit = QPushButton("Edit\npattern", self)
@@ -94,6 +96,8 @@ class Mail_build(QDialog):
 
         # WIDGETS PARAMETERS
         self.setWindowTitle("Mail")
+        self.setWindowIcon(Utils.get_pixmap("mail_dark"))
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         Utils.resize_font(self.label_title, 2)
 
@@ -101,6 +105,10 @@ class Mail_build(QDialog):
         self.button_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_new.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_delete.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        Utils.set_icon(self.button_clipboard, "copy", 2)
+        Utils.set_icon(self.button_edit, "edit_mail", 2)
+        Utils.set_icon(self.button_new, "create_mail", 2)
+        Utils.set_icon(self.button_delete, "trash", 2)
 
         for key in self.mail_pattern_list:
             self.combo_profiles_mail.addItem(key)
@@ -167,13 +175,13 @@ class Mail_build(QDialog):
         if self.is_side_display:
             self.is_side_display = False
             self.widget_side.setVisible(False)
-            self.resize(self.qsize_base)
+            self.resize(0, self.qsize_base.height())
         else:
             self.is_side_display = True
             self.widget_side.setVisible(True)
 
             self.qsize_base = self.size()
-            self.resize(int(self.qsize_base.width() * 2), self.qsize_base.height())
+            self.resize(int(self.qsize_base.width() * 1.5), self.qsize_base.height())
 
     @Slot()
     def update_header(self):

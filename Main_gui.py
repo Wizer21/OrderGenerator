@@ -28,7 +28,7 @@ class Main_gui(QMainWindow):
         }
 
         self.menubar_main = QMenuBar(self)
-        self.action_options = QAction("Options")
+        self.action_options = QAction("Settings")
 
         self.widget_main = QWidget(self)
         self.layout_main = QGridLayout(self)
@@ -79,7 +79,9 @@ class Main_gui(QMainWindow):
 
         # WIDGETS PARAMETERS
         Utils.resize_font(self.label_selected_profile, 2)
-        
+        Utils.set_icon(self.button_generate_mail, "mail", 2)
+        Utils.set_icon(self.button_import_data, "import_data", 2)
+
         self.widget_main.setContentsMargins(10, 10, 10, 10)
         self.table_widget_main.setSortingEnabled(True)
         self.button_import_data.setCursor(Qt.PointingHandCursor)

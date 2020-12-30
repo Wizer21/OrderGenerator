@@ -1,7 +1,7 @@
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-
+from Utils import *
 
 class Communication(QObject):
     name_new_profile = Signal(str)
@@ -32,6 +32,9 @@ class NewNameDialog(QDialog):
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.lineedit)
         self.layout.addWidget(self.button)
+
+        self.setWindowIcon(Utils.get_pixmap("add"))
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.button.clicked.connect(self.button_clicked)
 
