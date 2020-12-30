@@ -125,7 +125,6 @@ class Data_dialog(QDialog):
 
                 self.table_import_view.setItem(i + 1, y, item)
 
-
     @Slot()
     def push_button_clicked(self):
         name_count = 0  # Check if there is not only one column 'Name'
@@ -173,17 +172,14 @@ class Data_dialog(QDialog):
         self.messager.send_table.emit(final_data)
         self.close()
 
-
     def enterEvent(self, event):
         if self.update_clip:
             self.update_clipboard()
-
 
     def update_clipboard(self):
         clipboard = QGuiApplication.clipboard()
         mime_data = clipboard.mimeData()
         self.rich_clipboard.setText(mime_data.text())
-
 
     def add_items_clicked(self):
         if self.add_new_items:
@@ -192,7 +188,6 @@ class Data_dialog(QDialog):
         else:
             self.add_new_items = True
             self.button_add_clear.setText("Add")
-
 
     # @Slot(str)  # SLOT BLOCK OBJECT NAME ???
     def combo_top_changed(self, combo_text):

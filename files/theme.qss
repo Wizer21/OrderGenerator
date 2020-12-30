@@ -171,3 +171,32 @@ QTableWidget::item:selected {
   background: #ffd740;
   color: #262626;
 }
+  /* ------------------------------ */
+/* ---------- TABLE ---------- */
+/* ------------------------------ */
+QComboBox {
+  padding: 1px 18px 1px 3px;
+  min-width: 6em;
+  border: 0px solid yellow;
+  border-right: 5px solid white;
+  min-height: 35px;
+  margin: 5px;
+  background-color: #262626;
+}
+QComboBox:hover {
+    background-color: #64ffda;
+  padding: 0px;
+  border: 0px solid transparent;
+}
+QComboBox:drop-down {
+  width: 30px;
+}
+QComboBox QAbstractItemView {
+  background-color: #262626;
+  border: 0px solid white;
+  border-left: 5px solid #262626;
+  border-bottom: 5px solid #262626;
+}
+QComboBox QAbstractItemView:selected {
+  background-color: red;
+}

@@ -146,7 +146,7 @@ class Settings(QDialog):
 
     @Slot()
     def new_profile_clicked(self):
-        dialog = NewNameDialog()
+        dialog = NewNameDialog("profile")
         dialog.messager.name_new_profile.connect(self.apply_new_profile_name)
         dialog.exec_()
 

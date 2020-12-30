@@ -2,6 +2,7 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 import json
+from NewNameDialog import *
 
 class Mail_build(QDialog):
     def __init__(self, new_item_list, new_mail_profile):
@@ -10,6 +11,7 @@ class Mail_build(QDialog):
         self.mail_profile = new_mail_profile
         self.item_list = new_item_list
         self.is_side_display = False
+        self.qsize_base = self.size()
 
         self.layout_main = QGridLayout(self)
 
@@ -95,8 +97,24 @@ class Mail_build(QDialog):
         for key in self.mail_pattern_list:
             self.combo_profiles_mail.addItem(key)
 
-        self.text_key_list.setText("<r> REFERENCE\n<n> NAME\n<b> QUANTITY TO BUY")
+        self.text_key_list.setText("<r> Reference\n<n> Name\n<b> Quantity to buy")
         self.text_key_list.setReadOnly(True)
+        self.widget_side.setVisible(False)
+        self.text_key_list.setStyleSheet("border: 0px solid white;")
+        self.text_header.setStyleSheet("border: 0px solid white;")
+        self.text_body.setStyleSheet("border: 0px solid white;")
+        self.text_foot.setStyleSheet("border: 0px solid white;")
+
+        self.combo_profiles_mail.textActivated.connect(self.profile_changed)
+        self.text_header.textChanged.connect(self.update_header)
+        self.text_body.textChanged.connect(self.update_body)
+        self.text_foot.textChanged.connect(self.update_foot)
+        self.button_validate.clicked.connect(self.validate_clicked)
+        self.button_new.clicked.connect(self.new_button_clicked)
+        self.button_delete.clicked.connect(self.button_delete_clicked)
+        # self.button_clipboard.clicked.connect(self.clipboard_clicked)
+
+        self.button_edit.clicked.connect(self.edit_clicked)
 
     def load_pattern(self):
         try:
@@ -104,15 +122,12 @@ class Mail_build(QDialog):
                 self.mail_pattern_list = json.load(data_file)
 
         except FileNotFoundError:
-            mail = {
-                "header": "Hello!\n\nI'm sending you from this mail a new order.\n\n",
-                "body": "<n> x <b>, Ref <r>.\n",
-                "foot": "\nThank you in advance.\nI wish you a pleasant day.\n\nCordially."
-            }
-            self.mail_pattern_list["Default"] = mail
+            self.mail_pattern_list["Default"] = self.default_mail()
+            self.save_patterns()
 
-            with open(".\\files\\mail_pattern.json", "w") as data_file:
-                json.dump(self.mail_pattern_list, data_file)
+    def save_patterns(self):
+        with open(".\\files\\mail_pattern.json", "w") as data_file:
+            json.dump(self.mail_pattern_list, data_file)
 
     def display_mail_from_pattern(self):
         mail = ""
@@ -133,4 +148,93 @@ class Mail_build(QDialog):
         mail += self.mail_pattern_list[self.mail_profile]["foot"]
         self.text_mail.setText(mail)
 
+    def edit_clicked(self):
+        self.toggle_side()
 
+        if self.is_side_display:
+            self.text_header.setText(self.mail_pattern_list[self.mail_profile]["header"])
+            self.text_body.setText(self.mail_pattern_list[self.mail_profile]["body"])
+            self.text_foot.setText(self.mail_pattern_list[self.mail_profile]["foot"])
+
+    def toggle_side(self):
+        if self.is_side_display:
+            self.is_side_display = False
+            print("f")
+            self.widget_side.setVisible(False)
+            self.resize(self.qsize_base)
+        else:
+            self.is_side_display = True
+            print("t")
+            self.widget_side.setVisible(True)
+
+            self.qsize_base = self.size()
+            self.resize(int(self.qsize_base.width() * 2), self.qsize_base.height())
+
+    @Slot()
+    def update_header(self):
+        self.mail_pattern_list[self.mail_profile]["header"] = self.text_header.toPlainText()
+        self.display_mail_from_pattern()
+
+    @Slot()
+    def update_body(self):
+        self.mail_pattern_list[self.mail_profile]["body"] = self.text_body.toPlainText()
+        self.display_mail_from_pattern()
+
+    @Slot()
+    def update_foot(self):
+        self.mail_pattern_list[self.mail_profile]["foot"] = self.text_foot.toPlainText()
+        self.display_mail_from_pattern()
+
+    @Slot()
+    def validate_clicked(self):
+        self.save_patterns()
+        self.toggle_side()
+
+    @Slot()
+    def new_button_clicked(self):
+        new_name = NewNameDialog("mail")
+        new_name.messager.name_new_profile.connect(self.apply_new_preset)
+        new_name.exec_()
+
+    @Slot(str)
+    def apply_new_preset(self, profile_name):
+        self.mail_profile = profile_name
+
+        self.mail_pattern_list[profile_name] = self.default_mail()
+        self.combo_profiles_mail.addItem(profile_name)
+        self.combo_profiles_mail.setCurrentText(profile_name)
+
+        self.save_patterns()
+
+    @Slot(str)
+    def profile_changed(self, name):
+        self.mail_profile = name
+        self.display_mail_from_pattern()
+
+    @Slot()
+    def button_delete_clicked(self):
+        box = QMessageBox(QMessageBox.Warning, "Delete {0}".format(self.mail_profile), "Do you really want to delete {0} ?".format(self.mail_profile)
+                          , QMessageBox.Yes)
+        box.addButton(QMessageBox.No)
+        rep = box.exec_()
+        if rep == QMessageBox.Yes:
+            del self.mail_pattern_list[self.mail_profile]
+            self.save_patterns()
+
+            if len(self.mail_pattern_list) > 0:
+                self.mail_profile = list(self.mail_pattern_list)[0]
+            else:
+                self.mail_pattern_list["Default"] = self.default_mail()
+                self.mail_profile = "Default"
+
+            self.combo_profiles_mail.clear()
+            for i in self.mail_pattern_list:
+                self.combo_profiles_mail.addItem(i)
+
+    def default_mail(self):
+        mail = {
+            "header": "Hello!\n\nI'm sending you from this mail a new order.\n\n",
+            "body": "<n> x <b>, Ref <r>.\n",
+            "foot": "\nThank you in advance.\nI wish you a pleasant day.\n\nCordially."
+        }
+        return mail

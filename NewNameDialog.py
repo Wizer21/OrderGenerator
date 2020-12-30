@@ -8,19 +8,25 @@ class Communication(QObject):
 
 
 class NewNameDialog(QDialog):
-    def __init__(self):
+    def __init__(self, who):
         QDialog.__init__(self)
         self.messager = Communication()
 
         self.layout = QVBoxLayout(self)
-        self.label = QLabel("Profile name", self)
+        self.label = QLabel(self)
         self.lineedit = QLineEdit(self)
         self.button = QPushButton("Validate", self)
 
         self.build()
 
+        if who == "profile":
+            self.label.setText("Profile name")
+            self.setWindowTitle("New Profile")
+        elif who == "mail":
+            self.label.setText("Preset name")
+            self.setWindowTitle("New mail preset")
+
     def build(self):
-        self.setWindowTitle("New Profile")
 
         self.setLayout(self.layout)
         self.layout.addWidget(self.label)
