@@ -7,6 +7,7 @@ from TableWidget import *
 from Settings import *
 from Mail_build import *
 import json
+from Utils import *
 
 class Main_gui(QMainWindow):
     def __init__(self):
@@ -55,7 +56,6 @@ class Main_gui(QMainWindow):
 
         self.resize(1000, 800)
 
-
     def build(self):
         # STRUCTURE
         self.setMenuBar(self.menubar_main)
@@ -78,6 +78,8 @@ class Main_gui(QMainWindow):
         self.layout_main.addWidget(self.table_widget_main, 1, 0)
 
         # WIDGETS PARAMETERS
+        Utils.resize_font(self.label_selected_profile, 2)
+        
         self.widget_main.setContentsMargins(10, 10, 10, 10)
         self.table_widget_main.setSortingEnabled(True)
         self.button_import_data.setCursor(Qt.PointingHandCursor)
@@ -400,7 +402,12 @@ class Main_gui(QMainWindow):
     @Slot()
     def mail_generation_clicked(self):
         mail = Mail_build(self.item_list, self.current_mail_profile)
+        mail.messager.mail_used_changed.connect(self.apply_name_mail_profile)
         mail.exec_()
+
+    @Slot(str)
+    def apply_name_mail_profile(self, new_name):
+        self.current_mail_profile = new_name
 
     def closeEvent(self, event):
         self.save_settings()

@@ -3,6 +3,10 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 import json
 from NewNameDialog import *
+from Utils import *
+
+class Communication(QObject):
+    mail_used_changed = Signal(str)
 
 class Mail_build(QDialog):
     def __init__(self, new_item_list, new_mail_profile):
@@ -12,6 +16,7 @@ class Mail_build(QDialog):
         self.item_list = new_item_list
         self.is_side_display = False
         self.qsize_base = self.size()
+        self.messager = Communication()
 
         self.layout_main = QGridLayout(self)
 
@@ -89,6 +94,9 @@ class Mail_build(QDialog):
 
         # WIDGETS PARAMETERS
         self.setWindowTitle("Mail")
+
+        Utils.resize_font(self.label_title, 2)
+
         self.button_clipboard.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_new.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -96,6 +104,7 @@ class Mail_build(QDialog):
 
         for key in self.mail_pattern_list:
             self.combo_profiles_mail.addItem(key)
+        self.combo_profiles_mail.setCurrentText(self.mail_profile)
 
         self.text_key_list.setText("<r> Reference\n<n> Name\n<b> Quantity to buy")
         self.text_key_list.setReadOnly(True)
@@ -105,14 +114,14 @@ class Mail_build(QDialog):
         self.text_body.setStyleSheet("border: 0px solid white;")
         self.text_foot.setStyleSheet("border: 0px solid white;")
 
-        self.combo_profiles_mail.textActivated.connect(self.profile_changed)
+        self.combo_profiles_mail.currentTextChanged.connect(self.profile_changed)
         self.text_header.textChanged.connect(self.update_header)
         self.text_body.textChanged.connect(self.update_body)
         self.text_foot.textChanged.connect(self.update_foot)
         self.button_validate.clicked.connect(self.validate_clicked)
         self.button_new.clicked.connect(self.new_button_clicked)
         self.button_delete.clicked.connect(self.button_delete_clicked)
-        # self.button_clipboard.clicked.connect(self.clipboard_clicked)
+        self.button_clipboard.clicked.connect(self.clipboard_clicked)
 
         self.button_edit.clicked.connect(self.edit_clicked)
 
@@ -120,7 +129,6 @@ class Mail_build(QDialog):
         try:
             with open(".\\files\\mail_pattern.json", "r") as data_file:
                 self.mail_pattern_list = json.load(data_file)
-
         except FileNotFoundError:
             self.mail_pattern_list["Default"] = self.default_mail()
             self.save_patterns()
@@ -132,7 +140,6 @@ class Mail_build(QDialog):
     def display_mail_from_pattern(self):
         mail = ""
         mail += self.mail_pattern_list[self.mail_profile]["header"]
-
         body = self.mail_pattern_list[self.mail_profile]["body"]
 
         for i in self.item_list:
@@ -159,12 +166,10 @@ class Mail_build(QDialog):
     def toggle_side(self):
         if self.is_side_display:
             self.is_side_display = False
-            print("f")
             self.widget_side.setVisible(False)
             self.resize(self.qsize_base)
         else:
             self.is_side_display = True
-            print("t")
             self.widget_side.setVisible(True)
 
             self.qsize_base = self.size()
@@ -210,6 +215,7 @@ class Mail_build(QDialog):
     def profile_changed(self, name):
         self.mail_profile = name
         self.display_mail_from_pattern()
+        self.messager.mail_used_changed.emit(name)
 
     @Slot()
     def button_delete_clicked(self):
@@ -219,17 +225,24 @@ class Mail_build(QDialog):
         rep = box.exec_()
         if rep == QMessageBox.Yes:
             del self.mail_pattern_list[self.mail_profile]
-            self.save_patterns()
 
-            if len(self.mail_pattern_list) > 0:
-                self.mail_profile = list(self.mail_pattern_list)[0]
-            else:
+            if len(self.mail_pattern_list) == 0:
                 self.mail_pattern_list["Default"] = self.default_mail()
                 self.mail_profile = "Default"
+            else:
+                for key in self.mail_pattern_list:
+                    self.mail_profile = key
+                    break
 
+            self.combo_profiles_mail.blockSignals(True)
             self.combo_profiles_mail.clear()
             for i in self.mail_pattern_list:
                 self.combo_profiles_mail.addItem(i)
+            self.combo_profiles_mail.blockSignals(False)
+            self.combo_profiles_mail.setCurrentText(self.mail_profile)
+            self.profile_changed(self.mail_profile)
+
+            self.save_patterns()
 
     def default_mail(self):
         mail = {
@@ -238,3 +251,8 @@ class Mail_build(QDialog):
             "foot": "\nThank you in advance.\nI wish you a pleasant day.\n\nCordially."
         }
         return mail
+
+    def clipboard_clicked(self):
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(self.text_mail.toPlainText())
+

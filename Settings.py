@@ -3,12 +3,14 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 import json
 from NewNameDialog import *
+from Utils import *
 
 
 class Communication(QObject):
     new_selected_profile = Signal(str)
     profile_created = Signal(str)
     update_color_table = Signal(dict)
+
 
 class Settings(QDialog):
     def __init__(self, new_color_dict):
@@ -33,10 +35,6 @@ class Settings(QDialog):
         self.layout_right = QVBoxLayout(self)
         self.label_font = QLabel("Font", self)
         self.button_font_chooser = QPushButton("Open Font Chooser", self)
-        self.layout_mail = QGridLayout(self)
-        self.label_mail_preset = QLabel("Mail presets", self)
-        self.combobox_mail = QComboBox(self)
-        self.button_manage_mail = QPushButton("Manage", self)
 
         self.group_color = QGroupBox("Table Theme", self)
         self.layout_colors = QGridLayout(self)
@@ -66,11 +64,6 @@ class Settings(QDialog):
         self.layout_right.addWidget(self.label_font)
         self.layout_right.addWidget(self.button_font_chooser)
 
-        self.layout_right.addLayout(self.layout_mail)
-        self.layout_mail.addWidget(self.label_mail_preset, 0, 0)
-        self.layout_mail.addWidget(self.combobox_mail, 1, 0)
-        self.layout_mail.addWidget(self.button_manage_mail, 1, 1)
-
         self.layout_main.addWidget(self.group_color, 2, 0, 1, 2)
         self.group_color.setLayout(self.layout_colors)
         self.layout_colors.addWidget(self.combo_color_reference, 0, 0)
@@ -85,6 +78,8 @@ class Settings(QDialog):
         self.setContentsMargins(10, 10, 10, 10)
         self.layout_left.setAlignment(Qt.AlignTop)
         self.layout_right.setAlignment(Qt.AlignTop)
+
+        Utils.resize_font(self.label_title, 2)
 
         for i in range(len(self.color_list)):
             self.combo_color_reference.addItem("Reference")
