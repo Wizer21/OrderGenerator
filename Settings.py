@@ -8,13 +8,18 @@ from NewNameDialog import *
 class Communication(QObject):
     new_selected_profile = Signal(str)
     profile_created = Signal(str)
-
+    update_color_table = Signal(dict)
 
 class Settings(QDialog):
-    def __init__(self):
+    def __init__(self, new_color_dict):
         QDialog.__init__(self)
+        self.color_dict = new_color_dict
         self.current_table = "Default"
         self.messager = Communication()
+        self.color_list = ["#000000", "#2A363B", "#546e7a", "#757575", "#6d4c41", "#f4511e", "#fb8c00", "#ffb300",
+                           "#fdd835", "#c0ca33", "#7cb342", "#43a047", "#00897b", "#00acc1",
+                           "#039be5", "#1e88e5", "#3949ab", "#5e35b1", "#8e24aa", "#d81b60",
+                           "#e53935"]
 
         self.layout_main = QGridLayout(self)
         self.label_title = QLabel("Settings", self)
@@ -24,19 +29,25 @@ class Settings(QDialog):
         self.combobox_profiles = QComboBox(self)
         self.button_new_profile = QPushButton("New", self)
         self.button_delete_profile = QPushButton("Delete", self)
-        self.label_table_theme = QLabel("Table Theme", self)
-        self.combobox_table_theme = QComboBox(self)
 
         self.layout_right = QVBoxLayout(self)
         self.label_font = QLabel("Font", self)
         self.button_font_chooser = QPushButton("Open Font Chooser", self)
-
         self.layout_mail = QGridLayout(self)
         self.label_mail_preset = QLabel("Mail presets", self)
         self.combobox_mail = QComboBox(self)
         self.button_edit_mail = QPushButton("Edit", self)
         self.button_create_mail = QPushButton("Create", self)
         self.button_delete_mail = QPushButton("Delete", self)
+
+        self.group_color = QGroupBox("Table Theme", self)
+        self.layout_colors = QGridLayout(self)
+        self.combo_color_reference = QComboBox(self)
+        self.combo_color_text = QComboBox(self)
+        self.combo_color_sells = QComboBox(self)
+        self.combo_color_stock = QComboBox(self)
+        self.combo_color_average = QComboBox(self)
+        self.combo_color_to_buy = QComboBox(self)
 
         self.build()
 
@@ -52,25 +63,68 @@ class Settings(QDialog):
         self.layout_left.addWidget(self.combobox_profiles, 1, 0, 1, 2)
         self.layout_left.addWidget(self.button_new_profile, 2, 0)
         self.layout_left.addWidget(self.button_delete_profile, 2, 1)
-        self.layout_left.addWidget(self.label_table_theme, 3, 0, 1, 2)
-        self.layout_left.addWidget(self.combobox_table_theme, 4, 0, 1, 2)
 
         self.layout_main.addLayout(self.layout_right, 1, 1)
         self.layout_right.addWidget(self.label_font)
         self.layout_right.addWidget(self.button_font_chooser)
 
-        self.layout_main.addLayout(self.layout_mail, 2, 0, 1, 2)
+        self.layout_right.addLayout(self.layout_mail)
         self.layout_mail.addWidget(self.label_mail_preset, 0, 0)
         self.layout_mail.addWidget(self.combobox_mail, 1, 0)
         self.layout_mail.addWidget(self.button_edit_mail, 0, 1, 2, 1)
         self.layout_mail.addWidget(self.button_create_mail, 0, 2, 2, 1)
         self.layout_mail.addWidget(self.button_delete_mail, 0, 3, 2, 1)
 
+        self.layout_main.addWidget(self.group_color, 2, 0, 1, 2)
+        self.group_color.setLayout(self.layout_colors)
+        self.layout_colors.addWidget(self.combo_color_reference, 0, 0)
+        self.layout_colors.addWidget(self.combo_color_text, 0, 1)
+        self.layout_colors.addWidget(self.combo_color_sells, 0, 2)
+        self.layout_colors.addWidget(self.combo_color_stock, 1, 0)
+        self.layout_colors.addWidget(self.combo_color_average, 1, 1)
+        self.layout_colors.addWidget(self.combo_color_to_buy, 1, 2)
+
         # WIDGETS PARAMETERS
         self.button_edit_mail.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_create_mail.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_delete_mail.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout_right.setAlignment(Qt.AlignTop)
+
+        for i in range(len(self.color_list)):
+            self.combo_color_reference.addItem("Reference")
+            self.combo_color_text.addItem("Name")
+            self.combo_color_sells.addItem("Sells")
+            self.combo_color_stock.addItem("Stock")
+            self.combo_color_average.addItem("Average")
+            self.combo_color_to_buy.addItem("To buy")
+
+            self.combo_color_reference.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+            self.combo_color_text.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+            self.combo_color_sells.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+            self.combo_color_stock.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+            self.combo_color_average.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+            self.combo_color_to_buy.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+
+        self.combo_color_reference.setObjectName("Reference")
+        self.combo_color_text.setObjectName("Name")
+        self.combo_color_sells.setObjectName("Sells")
+        self.combo_color_stock.setObjectName("Stock")
+        self.combo_color_average.setObjectName("Average")
+        self.combo_color_to_buy.setObjectName("ToBuy")
+
+        self.combo_color_reference.setStyleSheet("background-color: {0};".format(self.color_dict["Reference"]))
+        self.combo_color_text.setStyleSheet("background-color: {0};".format(self.color_dict["Name"]))
+        self.combo_color_sells.setStyleSheet("background-color: {0};".format(self.color_dict["Sells"]))
+        self.combo_color_stock.setStyleSheet("background-color: {0};".format(self.color_dict["Stock"]))
+        self.combo_color_average.setStyleSheet("background-color: {0};".format(self.color_dict["Average"]))
+        self.combo_color_to_buy.setStyleSheet("background-color: {0};".format(self.color_dict["ToBuy"]))
+
+        self.combo_color_reference.activated.connect(self.combo_activated)
+        self.combo_color_text.activated.connect(self.combo_activated)
+        self.combo_color_sells.activated.connect(self.combo_activated)
+        self.combo_color_stock.activated.connect(self.combo_activated)
+        self.combo_color_average.activated.connect(self.combo_activated)
+        self.combo_color_to_buy.activated.connect(self.combo_activated)
 
         self.button_new_profile.clicked.connect(self.new_profile_clicked)
         self.combobox_profiles.textActivated.connect(self.profile_selected)
@@ -108,4 +162,11 @@ class Settings(QDialog):
         self.combobox_profiles.addItem(name)
         self.combobox_profiles.setCurrentText(name)
 
+
+    def combo_activated(self, id_color):
+        combo = self.sender()
+        combo.setStyleSheet("background-color: {0};".format(self.color_list[id_color]))
+
+        self.color_dict[combo.objectName()] = self.color_list[id_color]
+        self.messager.update_color_table.emit(self.color_dict)
 

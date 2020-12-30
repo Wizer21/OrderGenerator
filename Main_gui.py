@@ -16,14 +16,13 @@ class Main_gui(QMainWindow):
         self.sustain_value = 2
         self.used_month = 6
         self.color_dict = {
+            "Reference": "#546e7a",
             "Name": "#2A363B",
-            "Sells": "#E84A5F",
-            "Reference": "",
-            "Stock": "#FF847C",
-            "Average": "#FECEA8",
-            "ToBuy": "#99B989"
+            "Sells": "#fb8c00",
+            "Stock": "#1e88e5",
+            "Average": "#5e35b1",
+            "ToBuy": "#e53935"
         }
-        self.settings_changed = False
 
         self.menubar_main = QMenuBar(self)
         self.action_options = QAction("Options")
@@ -32,7 +31,7 @@ class Main_gui(QMainWindow):
         self.layout_main = QGridLayout(self)
 
         self.layout_top_panel = QGridLayout(self)
-        self.label_selected_profile = QLabel("Test Profile", self)
+        self.label_selected_profile = QLabel(self.current_table, self)
         self.button_import_data = QPushButton("Import\nData", self)
         self.button_generate_mail = QPushButton("Generate\nMail", self)
         self.label_sustain_wanted = QLabel("Buy for ", self)
@@ -45,7 +44,12 @@ class Main_gui(QMainWindow):
         self.table_widget_main = QTableWidget(self)
 
         self.build()
-        self.load_files()
+        self.load_settings()
+        self.load_tables()
+
+        if len(self.item_list) != 0:
+            self.build_table()
+            self.calc_order()
 
 
     def build(self):
@@ -269,51 +273,38 @@ class Main_gui(QMainWindow):
         self.save_settings()
         self.save_table()
 
-        sett = Settings()
+        sett = Settings(self.color_dict)
         sett.messager.new_selected_profile.connect(self.apply_new_profile_selected)
         sett.messager.profile_created.connect(self.apply_created_profile)
+        sett.messager.update_color_table.connect(self.update_color_table)
         sett.exec_()
 
-        if self.settings_changed and len(self.item_list) != 0:
-            self.build_table()
-            self.calc_order()
-
-        self.settings_changed = False
-
-    def load_files(self):
+    def load_settings(self):
         try:
-            with open(".\\files\\settings.json", "r") as data_json:
+            with open(".\\files\\settings.json", "r") as data_json:  # LOAD SETTINGS
                 settings = json.load(data_json)
                 self.current_table = settings["lasttable"]
                 self.month_count = settings["monthcount"]
                 self.sustain_value = settings["sustain"]
                 self.used_month = settings["usedmonth"]
-                self.label_selected_profile.setText(self.current_table)
-        except FileNotFoundError:
-            settings = {
-                "lasttable": self.current_table,
-                "monthcount": self.month_count,
-                "sustain": self.sustain_value,
-                "usedmonth": self.used_month
-            }
-            with open(".\\files\\settings.json", "w") as data_json:
-                json.dump(settings, data_json)
+                self.color_dict = settings["colors"]
+                self.update_displayed_settings()
+        except FileNotFoundError:  # DEFAULT SETTINGS
+            self.save_settings()
 
+    def load_tables(self):
         try:
-            with open(".\\files\\tables.json", "r") as data_json:
+            with open(".\\files\\tables.json", "r") as data_json:  # LOAD TABLES
                 tables = json.load(data_json)
 
-                for key in tables[self.current_table]:
+                self.item_list.clear()
+                for key in tables[self.current_table]:  # PUSH ITEMS TO ITEM LIST
                     item = Item(key, 0)
                     item.sells_history = tables[self.current_table][key]["sells"]
                     item.stock = tables[self.current_table][key]["stock"]
                     self.item_list.append(item)
 
-                if len(self.item_list) != 0:
-                    self.build_table()
-                    self.calc_order()
-
-        except FileNotFoundError:
+        except FileNotFoundError:  # ELSE PUSH DEFAULT TABLE
             items = {
             }
             tables = {
@@ -341,7 +332,8 @@ class Main_gui(QMainWindow):
             "lasttable": self.current_table,
             "monthcount": self.month_count,
             "sustain": self.sustain_value,
-            "usedmonth": self.used_month
+            "usedmonth": self.used_month,
+            "colors": self.color_dict
         }
         with open(".\\files\\settings.json", "w") as data_json:
             json.dump(settings, data_json)
@@ -351,6 +343,13 @@ class Main_gui(QMainWindow):
         self.current_table = new_profile_name
         self.label_selected_profile.setText(new_profile_name)
         self.settings_changed = True
+        self.load_tables()
+
+        if len(self.item_list) != 0:  # REFRESH TABLE
+            self.build_table()
+            self.calc_order()
+        else:
+            self.table_widget_main.clear()
 
     @Slot(str)
     def apply_created_profile(self, new_profile_name):
@@ -358,16 +357,38 @@ class Main_gui(QMainWindow):
         self.settings_changed = True
         self.label_selected_profile.setText(new_profile_name)
 
+        self.add_table_to_json(new_profile_name)
+        self.load_tables()
+        if len(self.item_list) != 0:  # REFRESH TABLE
+            self.build_table()
+            self.calc_order()
+        else:
+            self.table_widget_main.clear()
+
+    def add_table_to_json(self, talbe_name):
         with open(".\\files\\tables.json", "r") as data_json:
             tables = json.load(data_json)
 
             items = {
             }
-            tables[new_profile_name] = items
+            tables[talbe_name] = items
 
             with open(".\\files\\tables.json", "w") as data_json:
                 json.dump(tables, data_json)
 
+    def update_displayed_settings(self):
+        self.label_selected_profile.setText(self.current_table)
+        self.line_edit_sustain.setText(str(self.sustain_value))
+        self.line_edit_base_month.setText(str(self.used_month))
+
+    @Slot(dict)
+    def update_color_table(self, new_color_dict):
+        self.color_dict = new_color_dict
+        if len(self.item_list) != 0:  # REFRESH TABLE
+            self.build_table()
+            self.calc_order()
+
     def closeEvent(self, event):
         self.save_settings()
         self.save_table()
+
