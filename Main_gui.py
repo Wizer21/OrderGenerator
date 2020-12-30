@@ -5,12 +5,14 @@ from Data_dialog import *
 from Item import *
 from TableWidget import *
 from Settings import *
+from Mail_build import *
 import json
 
 class Main_gui(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.current_table = "Default"
+        self.current_mail_profile = "Default"
         self.item_list = []
         self.month_count = 0
         self.sustain_value = 2
@@ -51,6 +53,8 @@ class Main_gui(QMainWindow):
             self.build_table()
             self.calc_order()
 
+        self.resize(1000, 800)
+
 
     def build(self):
         # STRUCTURE
@@ -74,6 +78,7 @@ class Main_gui(QMainWindow):
         self.layout_main.addWidget(self.table_widget_main, 1, 0)
 
         # WIDGETS PARAMETERS
+        self.widget_main.setContentsMargins(10, 10, 10, 10)
         self.table_widget_main.setSortingEnabled(True)
         self.button_import_data.setCursor(Qt.PointingHandCursor)
         self.button_generate_mail.setCursor(Qt.PointingHandCursor)
@@ -89,6 +94,7 @@ class Main_gui(QMainWindow):
         self.button_import_data.clicked.connect(self.import_data_clicked)
         self.line_edit_sustain.textEdited.connect(self.apply_new_sustain_value)
         self.line_edit_base_month.textEdited.connect(self.apply_new_base_value)
+        self.button_generate_mail.clicked.connect(self.mail_generation_clicked)
 
 
     @Slot()
@@ -241,6 +247,7 @@ class Main_gui(QMainWindow):
             else:
                 value = TableWidgetItem(str(to_buy))
 
+            self.item_list[i].to_buy = to_buy
             value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
             value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
             self.table_widget_main.setItem(i, pos_column_average, value)
@@ -288,6 +295,7 @@ class Main_gui(QMainWindow):
                 self.sustain_value = settings["sustain"]
                 self.used_month = settings["usedmonth"]
                 self.color_dict = settings["colors"]
+                self.current_mail_profile = settings["mailprofile"]
                 self.update_displayed_settings()
         except FileNotFoundError:  # DEFAULT SETTINGS
             self.save_settings()
@@ -333,7 +341,8 @@ class Main_gui(QMainWindow):
             "monthcount": self.month_count,
             "sustain": self.sustain_value,
             "usedmonth": self.used_month,
-            "colors": self.color_dict
+            "colors": self.color_dict,
+            "mailprofile": self.current_mail_profile
         }
         with open(".\\files\\settings.json", "w") as data_json:
             json.dump(settings, data_json)
@@ -388,7 +397,13 @@ class Main_gui(QMainWindow):
             self.build_table()
             self.calc_order()
 
+    @Slot()
+    def mail_generation_clicked(self):
+        mail = Mail_build(self.item_list, self.current_mail_profile)
+        mail.exec_()
+
     def closeEvent(self, event):
         self.save_settings()
         self.save_table()
+
 
