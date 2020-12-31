@@ -21,7 +21,7 @@ QPushButton::hover {
     border: 1px solid white;
 }
 QPushButton::pressed {
-    background-color: #ff2b36;
+    background-color: #a7bdc7;
     color: #292929;
     padding: 5px;
     border: 0px solid transparent
@@ -53,10 +53,10 @@ QScrollBar::handle::pressed {
     background-color: white;
 }
 QScrollBar::vertical {
-    width: 17px;
+    width: 20px;
 }
 QScrollBar::horizontal {
-    height: 17px;
+    height: 20px;
 }
 /* ------------------------------ */
 /* ---------- SLIDER ------- */

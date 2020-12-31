@@ -3,18 +3,20 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from Utils import *
 
+
 class Connection(QObject):
     send_table = Signal(dict)
 
 
 class Data_dialog(QDialog):
-    def __init__(self):
+    def __init__(self, new_color_dict):
         QDialog.__init__(self)
         self.messager = Connection()
         self.add_new_items = True
         self.list_combobox = []
         self.table = [[]]
         self.update_clip = True
+        self.color_dict = new_color_dict
 
         self.layout_main = QGridLayout(self)
 
@@ -68,6 +70,9 @@ class Data_dialog(QDialog):
         Utils.set_icon(self.button_add_clear, "add_items", 1.5)
         Utils.set_icon(self.button_push, "pushtable", 1.5)
         Utils.set_icon(self.button_paste, "paste_clipboard", 2)
+        Utils.style_click_button(self.button_paste, "#1976d2")
+        Utils.style_click_button(self.button_push, "#689f38")
+        Utils.style_click_button(self.button_add_clear, "#ffa000")
 
         self.button_paste.clicked.connect(self.import_clicked)
         self.button_push.clicked.connect(self.push_button_clicked)
@@ -116,7 +121,7 @@ class Data_dialog(QDialog):
 
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
             combo = QComboBox(self)
-            combo.addItems(["Skip", "Name", "Reference", "Sells", "Stock"])
+            combo.addItems(["Skip", "Name", "Ref.", "Sells", "Stock"])
 
             self.table_import_view.setCellWidget(0, i, combo)
             combo.setCursor(Qt.PointingHandCursor)
@@ -128,6 +133,7 @@ class Data_dialog(QDialog):
 
         self.list_combobox[0].setCurrentIndex(1)
         self.list_combobox[len(self.list_combobox) - 1].setCurrentIndex(4)
+        self.style_boxes()
 
         for i in range(len(self.table)):  # PUSH DATA
             for y in range(len(self.table[i])):
@@ -172,11 +178,11 @@ class Data_dialog(QDialog):
                     my_list.append(int(y[i]))
                 final_data["Sells"].append(my_list)
 
-            elif self.list_combobox[i].currentText() == "Reference":
+            elif self.list_combobox[i].currentText() == "Ref.":
                 my_list = []
                 for y in self.table:
                     my_list.append(y[i])
-                final_data["Reference"].append(my_list)
+                final_data["Reference"] = my_list
 
             elif self.list_combobox[i].currentText() == "Stock":
                 my_list = []
@@ -201,17 +207,21 @@ class Data_dialog(QDialog):
             self.add_new_items = False
             self.button_add_clear.setText("Skip")
             Utils.set_icon(self.button_add_clear, "skip_items", 1.5)
+            Utils.style_click_button(self.button_add_clear, "#455a64")
         else:
             self.add_new_items = True
             self.button_add_clear.setText("Add")
             Utils.set_icon(self.button_add_clear, "add_items", 1.5)
+            Utils.style_click_button(self.button_add_clear, "#ffa000")
 
     # @Slot(str)  # SLOT BLOCK OBJECT NAME ???
     def combo_top_changed(self, combo_text):
-        sender_id = self.sender().objectName()
+        combo = self.sender()
+
+        self.paint_box(combo, combo_text)
 
         for i in range(len(self.list_combobox)):
-            if sender_id == self.list_combobox[i].objectName():
+            if combo.objectName() == self.list_combobox[i].objectName():
                 continue
             if self.list_combobox[i].currentText() == "Name" and combo_text == "Name":
                 self.list_combobox[i].setCurrentText("Skip")
@@ -223,3 +233,21 @@ class Data_dialog(QDialog):
                 self.list_combobox[i].setCurrentText("Skip")
                 return
 
+    def style_boxes(self):  # Skip", "Name", "Reference", "Sells", "Stock
+        for i in self.list_combobox:
+            self.paint_box(i, i.currentText())
+
+            i.setItemData(0, QColor("#000000"), Qt.BackgroundRole)
+            i.setItemData(1, QColor(self.color_dict["Name"]), Qt.BackgroundRole)
+            i.setItemData(2, QColor(self.color_dict["Reference"]), Qt.BackgroundRole)
+            i.setItemData(3, QColor(self.color_dict["Sells"]), Qt.BackgroundRole)
+            i.setItemData(4, QColor(self.color_dict["Stock"]), Qt.BackgroundRole)
+
+    def paint_box(self, combo, text):
+        if text == "Ref.":
+            text = "Reference"
+
+        if text in self.color_dict:
+            combo.setStyleSheet("background-color: {0};".format(self.color_dict[text]))
+        else:
+            combo.setStyleSheet("background-color: transparent;")

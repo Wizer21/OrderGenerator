@@ -35,6 +35,7 @@ class NewNameDialog(QDialog):
 
         self.setWindowIcon(Utils.get_pixmap("add"))
         self.setAttribute(Qt.WA_DeleteOnClose)
+        Utils.style_click_button(self.button, "#7cb342")
 
         self.button.clicked.connect(self.button_clicked)
 

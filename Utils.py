@@ -34,7 +34,9 @@ class Utils:
             "settings_dark": self.scale_pixmap(".\\files\\settings_dark.png", map_size[0], map_size[1]),
             "import_data_dark": self.scale_pixmap(".\\files\\import_data_dark.png", map_size[0], map_size[1]),
             "add": self.scale_pixmap(".\\files\\add.png", map_size[0], map_size[1]),
-            "logo": self.scale_pixmap(".\\files\\logo.png", map_size[0], map_size[1])
+            "logo": self.scale_pixmap(".\\files\\logo.png", map_size[0], map_size[1]),
+            "eyeopen": self.scale_pixmap(".\\files\\eyeopen.png", icon_size[0], icon_size[1]),
+            "eyeclose": self.scale_pixmap(".\\files\\eyeclose.png", icon_size[0], icon_size[1])
         }
 
     def scale_pixmap(self, url, w, h):
@@ -54,4 +56,22 @@ class Utils:
     @staticmethod
     def resize_font(widget, value):
         widget.setStyleSheet("font-size: {0}px;".format(int(pixelsize * value)))
+
+    @staticmethod
+    def style_click_button(widget, color):
+        style = """QPushButton {
+                background-color: <color>;
+                padding: 10px;
+                border: 0px solid red;
+                }
+                QPushButton::hover {
+                    border: 2px solid white;
+                }
+                QPushButton::pressed {
+                    background-color: #161616;
+                    color: <color>;
+                    padding: 5px;
+                    border: 0px solid transparent
+                }"""
+        widget.setStyleSheet(style.replace("<color>", color))
 

@@ -109,6 +109,11 @@ class Mail_build(QDialog):
         Utils.set_icon(self.button_edit, "edit_mail", 2)
         Utils.set_icon(self.button_new, "create_mail", 2)
         Utils.set_icon(self.button_delete, "trash", 2)
+        Utils.style_click_button(self.button_clipboard, "#1976d2")
+        Utils.style_click_button(self.button_edit, "#ffa000")
+        Utils.style_click_button(self.button_new, "#689f38")
+        Utils.style_click_button(self.button_delete, "#d32f2f")
+        Utils.style_click_button(self.button_validate, "#689f38")
 
         for key in self.mail_pattern_list:
             self.combo_profiles_mail.addItem(key)

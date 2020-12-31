@@ -101,6 +101,8 @@ class Settings(QDialog):
         Utils.resize_font(self.label_title, 2)
         Utils.set_icon(self.button_new_profile, "add_profile", 1)
         Utils.set_icon(self.button_delete_profile, "trash", 1)
+        Utils.style_click_button(self.button_new_profile, "#689f38")
+        Utils.style_click_button(self.button_delete_profile, "#d32f2f")
 
         for i in range(len(self.color_list)):
             self.combo_color_reference.addItem("Reference")
@@ -137,8 +139,12 @@ class Settings(QDialog):
             self.button_position_name.setText("[Name][...][Stock]")
         if self.show_ref:
             self.button_show_ref.setText("Show")
+            Utils.style_click_button(self.button_show_ref, "#ffa000")
+            Utils.set_icon(self.button_show_ref, "eyeopen", 1)
         else:
             self.button_show_ref.setText("Hide")
+            Utils.style_click_button(self.button_show_ref, "#455a64")
+            Utils.set_icon(self.button_show_ref, "eyeclose", 1)
 
         self.combo_color_reference.activated.connect(self.combo_activated)
         self.combo_color_text.activated.connect(self.combo_activated)
@@ -232,9 +238,13 @@ class Settings(QDialog):
         if self.show_ref:
             self.show_ref = False
             self.button_show_ref.setText("Hide")
+            Utils.style_click_button(self.button_show_ref, "#455a64")
+            Utils.set_icon(self.button_show_ref, "eyeclose", 1)
         else:
             self.show_ref = True
             self.button_show_ref.setText("Show")
+            Utils.style_click_button(self.button_show_ref, "#ffa000")
+            Utils.set_icon(self.button_show_ref, "eyeopen", 1)
 
         self.messager.send_is_show_ref.emit(self.show_ref)
 

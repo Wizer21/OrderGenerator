@@ -85,6 +85,8 @@ class Main_gui(QMainWindow):
         Utils.resize_font(self.label_selected_profile, 2)
         Utils.set_icon(self.button_generate_mail, "mail", 2)
         Utils.set_icon(self.button_import_data, "import_data", 2)
+        Utils.style_click_button(self.button_import_data, "#ffa000")
+        Utils.style_click_button(self.button_generate_mail, "#1976d2")
 
         self.widget_main.setContentsMargins(10, 10, 10, 10)
         self.table_widget_main.setSortingEnabled(True)
@@ -106,7 +108,7 @@ class Main_gui(QMainWindow):
 
     @Slot()
     def import_data_clicked(self):
-        dialog = Data_dialog()
+        dialog = Data_dialog(self.color_dict)
         dialog.messager.send_table.connect(self.apply_new_list)
         dialog.exec_()
 
@@ -212,6 +214,14 @@ class Main_gui(QMainWindow):
 
             column = position_dict["startsells"]
             self.table_widget_main.setItem(i, position_dict["name"], name)  # FILL NAME COLUMN
+
+            if self.show_ref:
+                ref = QTableWidgetItem(self.item_list[i].reference)
+                ref.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+                ref.setBackgroundColor(QColor(self.color_dict["Reference"]))
+
+                column = position_dict["startsells"]
+                self.table_widget_main.setItem(i, 0, ref)  # FILL NAME COLUMN
 
             for y in range(len(self.item_list[i].sells_history)):  # FILL SELLS COLUMN
                 val = self.item_list[i].sells_history[y]
@@ -380,7 +390,8 @@ class Main_gui(QMainWindow):
         for i in range(len(self.item_list)):
             new_dict = {
                 "sells": self.item_list[i].sells_history,
-                "stock": self.item_list[i].stock
+                "stock": self.item_list[i].stock,
+                "ref": self.item_list[i].reference
             }
             tables[self.current_table][self.item_list[i].name] = new_dict
 
@@ -466,6 +477,7 @@ class Main_gui(QMainWindow):
             item = Item(key, 0)
             item.sells_history = tables_list[self.current_table][key]["sells"]
             item.stock = tables_list[self.current_table][key]["stock"]
+            item.reference = tables_list[self.current_table][key]["ref"]
             self.item_list.append(item)
 
         for key in tables_list[self.current_table]:
