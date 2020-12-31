@@ -33,7 +33,8 @@ class Utils:
             "mail_dark": self.scale_pixmap(".\\files\\mail_dark.png", map_size[0], map_size[1]),
             "settings_dark": self.scale_pixmap(".\\files\\settings_dark.png", map_size[0], map_size[1]),
             "import_data_dark": self.scale_pixmap(".\\files\\import_data_dark.png", map_size[0], map_size[1]),
-            "add": self.scale_pixmap(".\\files\\add.png", map_size[0], map_size[1])
+            "add": self.scale_pixmap(".\\files\\add.png", map_size[0], map_size[1]),
+            "logo": self.scale_pixmap(".\\files\\logo.png", map_size[0], map_size[1])
         }
 
     def scale_pixmap(self, url, w, h):

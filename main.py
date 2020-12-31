@@ -9,9 +9,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     QApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton)
+
     lDesktopScreen = app.primaryScreen()
     lScreenGeom = lDesktopScreen.availableGeometry()
-
     rec = QRect(lScreenGeom)
     resolution = [rec.width(), rec.height()]
 

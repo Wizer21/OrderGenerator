@@ -151,11 +151,11 @@ QTableWidget {
 }
 QHeaderView::section:vertical {
   background: transparent;
-  font-size: 15px;
+  font-size: 20px;
 }
 QHeaderView::section:horizontal {
   background: transparent;
-  font-size: 15px;
+  font-size: 20px;
   padding: 0px;
   margin: 0px;
   min-width: 100px;

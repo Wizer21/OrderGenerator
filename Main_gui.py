@@ -78,6 +78,8 @@ class Main_gui(QMainWindow):
         self.layout_main.addWidget(self.table_widget_main, 1, 0)
 
         # WIDGETS PARAMETERS
+        self.setWindowTitle("Table")
+        self.setWindowIcon(Utils.get_pixmap("logo"))
         Utils.resize_font(self.label_selected_profile, 2)
         Utils.set_icon(self.button_generate_mail, "mail", 2)
         Utils.set_icon(self.button_import_data, "import_data", 2)
