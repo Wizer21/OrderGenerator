@@ -215,11 +215,11 @@ class Data_dialog(QDialog):
                 continue
             if self.list_combobox[i].currentText() == "Name" and combo_text == "Name":
                 self.list_combobox[i].setCurrentText("Skip")
-                has_name = True
+                return
+            if self.list_combobox[i].currentText() == "Reference" and combo_text == "Reference":
+                self.list_combobox[i].setCurrentText("Skip")
                 return
             if self.list_combobox[i].currentText() == "Stock" and combo_text == "Stock":
-
                 self.list_combobox[i].setCurrentText("Skip")
-                has_stock = True
                 return
 

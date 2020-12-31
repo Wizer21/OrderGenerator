@@ -27,6 +27,7 @@ class Main_gui(QMainWindow):
             "ToBuy": "#e53935"
         }
         self.name_columun_end = False
+        self.show_ref = True
 
         self.menubar_main = QMenuBar(self)
         self.action_options = QAction("Settings")
@@ -112,13 +113,20 @@ class Main_gui(QMainWindow):
     @Slot()
     def apply_new_list(self, new_dict):
         push_if_new_item = new_dict["Add Items"]
+        ref = new_dict["Reference"]
         names = new_dict["Name"]
         lists = new_dict["Sells"]
         stock = new_dict["Stock"]
+
         if len(stock) == 0:
             has_stock = False
         else:
             has_stock = True
+
+        if len(ref) == 0:
+            has_ref = False
+        else:
+            has_ref = True
 
         try:
             added_months = len(lists)
@@ -134,6 +142,8 @@ class Main_gui(QMainWindow):
                 if self.item_list[y].name == names[i]:  # IF NEW ITEMS ALREADY EXIST
                     for z in lists:  # For every list
                         self.item_list[y].sells_history.append(z[i])  # Push the val at i
+                    if has_ref:
+                        self.item_list[y].reference = ref[i]
                     new_item = True
                     continue
 
@@ -141,6 +151,8 @@ class Main_gui(QMainWindow):
                 self.item_list.insert(0, Item(names[i], self.month_count))
                 for z in lists:  # For every list
                     self.item_list[0].sells_history.append(z[i])  # Push the val at i
+                if has_ref:
+                    self.item_list[0].reference = ref[i]
             i += 1
 
         item_not_refreshed = False  # FIND ITEM THAT EXIST BUT ARE NOT ACTUALISED
@@ -168,19 +180,38 @@ class Main_gui(QMainWindow):
 
         sells_count = len(self.item_list[0].sells_history)
         self.table_widget_main.setRowCount(len(self.item_list))
-        self.table_widget_main.setColumnCount(sells_count + 4)  # +4 for column name/stock/average/ordervalue
+
+        if self.name_columun_end:
+            namepos = sells_count + 2
+            sellspos = 0
+        else:
+            namepos = 0
+            sellspos = 1
+        if self.show_ref:
+            ref_pos = 1
+        else:
+            ref_pos = 0
+        stockpos = sellspos + sells_count + ref_pos
+        averagepos = stockpos + 1
+        buypos = sells_count + 3 + ref_pos
+
+        position_dict = {
+            "name": namepos + ref_pos,
+            "startsells": sellspos + ref_pos,
+            "stock": stockpos,
+            "average": averagepos,
+            "tobuy": buypos
+        }
+
+        self.table_widget_main.setColumnCount(sells_count + 4 + ref_pos)  # +4 for column name/stock/average/ordervalue
 
         for i in range(len(self.item_list)):  # EVERY ROW
             name = QTableWidgetItem(self.item_list[i].name)
             name.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
             name.setBackgroundColor(QColor(self.color_dict["Name"]))
 
-            if self.name_columun_end:
-                self.table_widget_main.setItem(i, sells_count + 2, name)
-                column = 0
-            else:
-                self.table_widget_main.setItem(i, 0, name)  # FILL NAME COLUMN
-                column = 1
+            column = position_dict["startsells"]
+            self.table_widget_main.setItem(i, position_dict["name"], name)  # FILL NAME COLUMN
 
             for y in range(len(self.item_list[i].sells_history)):  # FILL SELLS COLUMN
                 val = self.item_list[i].sells_history[y]
@@ -198,13 +229,19 @@ class Main_gui(QMainWindow):
 
             stock.setBackgroundColor(QColor(self.color_dict["Stock"]))
             stock.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-            self.table_widget_main.setItem(i, column, stock)
+            self.table_widget_main.setItem(i, position_dict["stock"], stock)
 
-        headers = ["Name"]
+        headers = []
+        if self.show_ref:
+            headers.append("Reference")
+        if not self.name_columun_end:
+            headers.append("Name")
         for i in range(0, sells_count):
             headers.append("Sells")
         headers.append("Stock")
         headers.append("Average\nSells")
+        if self.name_columun_end:
+            headers.append("Name")
         headers.append("To Buy")
         self.table_widget_main.setHorizontalHeaderLabels(headers)
         self.table_widget_main.resizeColumnsToContents()
@@ -267,6 +304,8 @@ class Main_gui(QMainWindow):
             self.table_widget_main.setItem(i, column_count - 1, value)
             self.table_widget_main.resizeColumnsToContents()
 
+            self.table_widget_main.columnMoved(1, 0, column_count - 2)
+
     @Slot(str)
     def apply_new_sustain_value(self, str_value):
         if str_value == "":
@@ -294,12 +333,13 @@ class Main_gui(QMainWindow):
         self.save_settings()
         self.save_table()
 
-        sett = Settings(self.color_dict, self.name_columun_end)
+        sett = Settings(self.color_dict, self.name_columun_end, self.show_ref)
         sett.messager.new_selected_profile.connect(self.apply_new_profile_selected)
         sett.messager.profile_created.connect(self.apply_created_profile)
         sett.messager.deleted_profile.connect(self.apply_deleted_profile)
         sett.messager.update_color_table.connect(self.update_color_table)
         sett.messager.send_name_position.connect(self.set_name_position)
+        sett.messager.send_is_show_ref.connect(self.set_show_ref)
         sett.exec_()
 
     def load_settings(self):
@@ -313,6 +353,7 @@ class Main_gui(QMainWindow):
                 self.color_dict = settings["colors"]
                 self.current_mail_profile = settings["mailprofile"]
                 self.name_columun_end = settings["nameend"]
+                self.show_ref = settings["showref"]
                 self.update_displayed_settings()
         except FileNotFoundError:  # DEFAULT SETTINGS
             self.save_settings()
@@ -354,7 +395,8 @@ class Main_gui(QMainWindow):
             "usedmonth": self.used_month,
             "colors": self.color_dict,
             "mailprofile": self.current_mail_profile,
-            "nameend": self.name_columun_end
+            "nameend": self.name_columun_end,
+            "showref": self.show_ref
         }
         with open(".\\files\\settings.json", "w") as data_json:
             json.dump(settings, data_json)
@@ -428,7 +470,6 @@ class Main_gui(QMainWindow):
 
         for key in tables_list[self.current_table]:
             self.month_count = len(tables_list[self.current_table][key]["sells"])
-            print(str(self.month_count))
             break
 
     def add_table_to_json(self, talbe_name):
@@ -472,6 +513,13 @@ class Main_gui(QMainWindow):
     @Slot(bool)
     def set_name_position(self, is_name_at_the_end):
         self.name_columun_end = is_name_at_the_end
+        if len(self.item_list) != 0:  # REFRESH TABLE
+            self.build_table()
+            self.calc_order()
+
+    @Slot(bool)
+    def set_show_ref(self, is_ref_show):
+        self.show_ref = is_ref_show
         if len(self.item_list) != 0:  # REFRESH TABLE
             self.build_table()
             self.calc_order()
