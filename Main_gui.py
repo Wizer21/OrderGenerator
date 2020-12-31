@@ -26,6 +26,7 @@ class Main_gui(QMainWindow):
             "Average": "#5e35b1",
             "ToBuy": "#e53935"
         }
+        self.name_columun_end = False
 
         self.menubar_main = QMenuBar(self)
         self.action_options = QAction("Settings")
@@ -174,8 +175,12 @@ class Main_gui(QMainWindow):
             name.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
             name.setBackgroundColor(QColor(self.color_dict["Name"]))
 
-            self.table_widget_main.setItem(i, 0, name)  # FILL NAME COLUMN
-            column = 1
+            if self.name_columun_end:
+                self.table_widget_main.setItem(i, sells_count + 2, name)
+                column = 0
+            else:
+                self.table_widget_main.setItem(i, 0, name)  # FILL NAME COLUMN
+                column = 1
 
             for y in range(len(self.item_list[i].sells_history)):  # FILL SELLS COLUMN
                 val = self.item_list[i].sells_history[y]
@@ -206,7 +211,12 @@ class Main_gui(QMainWindow):
 
     def calc_order(self):
         calc_month = self.used_month
-        pos_column_average = self.table_widget_main.columnCount() - 1
+
+        column_count = self.table_widget_main.columnCount()
+        if self.name_columun_end:
+            pos_column_average = column_count - 3
+        else:
+            pos_column_average = column_count - 2
 
         if self.month_count < calc_month:
             calc_month = self.month_count
@@ -237,7 +247,7 @@ class Main_gui(QMainWindow):
 
             value.setBackgroundColor(QColor(self.color_dict["Average"]))
             value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-            self.table_widget_main.setItem(i, pos_column_average - 1, value)
+            self.table_widget_main.setItem(i, pos_column_average, value)
 
             if 0 < to_buy < 1:
                 to_buy = round(to_buy, 2)
@@ -254,7 +264,7 @@ class Main_gui(QMainWindow):
             self.item_list[i].to_buy = to_buy
             value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
             value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-            self.table_widget_main.setItem(i, pos_column_average, value)
+            self.table_widget_main.setItem(i, column_count - 1, value)
             self.table_widget_main.resizeColumnsToContents()
 
     @Slot(str)
@@ -284,11 +294,12 @@ class Main_gui(QMainWindow):
         self.save_settings()
         self.save_table()
 
-        sett = Settings(self.color_dict)
+        sett = Settings(self.color_dict, self.name_columun_end)
         sett.messager.new_selected_profile.connect(self.apply_new_profile_selected)
         sett.messager.profile_created.connect(self.apply_created_profile)
         sett.messager.deleted_profile.connect(self.apply_deleted_profile)
         sett.messager.update_color_table.connect(self.update_color_table)
+        sett.messager.send_name_position.connect(self.set_name_position)
         sett.exec_()
 
     def load_settings(self):
@@ -301,6 +312,7 @@ class Main_gui(QMainWindow):
                 self.used_month = settings["usedmonth"]
                 self.color_dict = settings["colors"]
                 self.current_mail_profile = settings["mailprofile"]
+                self.name_columun_end = settings["nameend"]
                 self.update_displayed_settings()
         except FileNotFoundError:  # DEFAULT SETTINGS
             self.save_settings()
@@ -341,7 +353,8 @@ class Main_gui(QMainWindow):
             "sustain": self.sustain_value,
             "usedmonth": self.used_month,
             "colors": self.color_dict,
-            "mailprofile": self.current_mail_profile
+            "mailprofile": self.current_mail_profile,
+            "nameend": self.name_columun_end
         }
         with open(".\\files\\settings.json", "w") as data_json:
             json.dump(settings, data_json)
@@ -455,6 +468,13 @@ class Main_gui(QMainWindow):
         self.table_widget_main.clear()
         self.table_widget_main.setColumnCount(0)
         self.table_widget_main.setRowCount(0)
+
+    @Slot(bool)
+    def set_name_position(self, is_name_at_the_end):
+        self.name_columun_end = is_name_at_the_end
+        if len(self.item_list) != 0:  # REFRESH TABLE
+            self.build_table()
+            self.calc_order()
 
     def closeEvent(self, event):
         self.save_settings()

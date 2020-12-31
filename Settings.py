@@ -11,10 +11,11 @@ class Communication(QObject):
     profile_created = Signal(str)
     update_color_table = Signal(dict)
     deleted_profile = Signal(str)
+    send_name_position = Signal(bool)
 
 
 class Settings(QDialog):
-    def __init__(self, new_color_dict):
+    def __init__(self, new_color_dict, is_name_end_position):
         QDialog.__init__(self)
         self.color_dict = new_color_dict
         self.current_table = "Default"
@@ -24,6 +25,7 @@ class Settings(QDialog):
                            "#fdd835", "#c0ca33", "#7cb342", "#43a047", "#00897b", "#00acc1",
                            "#039be5", "#1e88e5", "#3949ab", "#5e35b1", "#8e24aa", "#d81b60",
                            "#e53935"]
+        self.name_end_position = is_name_end_position
 
         self.layout_main = QGridLayout(self)
         self.label_title = QLabel("Settings", self)
@@ -37,6 +39,8 @@ class Settings(QDialog):
         self.layout_right = QVBoxLayout(self)
         self.label_font = QLabel("Font", self)
         self.button_font_chooser = QPushButton("Open Font Chooser", self)
+        self.label_name_end = QLabel("Column [Name] position", self)
+        self.button_position_name = QPushButton(self)
 
         self.group_color = QGroupBox("Table Theme", self)
         self.layout_colors = QGridLayout(self)
@@ -65,6 +69,8 @@ class Settings(QDialog):
         self.layout_main.addLayout(self.layout_right, 1, 1)
         self.layout_right.addWidget(self.label_font)
         self.layout_right.addWidget(self.button_font_chooser)
+        self.layout_right.addWidget(self.label_name_end)
+        self.layout_right.addWidget(self.button_position_name)
 
         self.layout_main.addWidget(self.group_color, 2, 0, 1, 2)
         self.group_color.setLayout(self.layout_colors)
@@ -117,6 +123,11 @@ class Settings(QDialog):
         self.combo_color_average.setStyleSheet("background-color: {0};".format(self.color_dict["Average"]))
         self.combo_color_to_buy.setStyleSheet("background-color: {0};".format(self.color_dict["ToBuy"]))
 
+        if self.name_end_position:
+            self.button_position_name.setText("[...][Name][Stock]")
+        else:
+            self.button_position_name.setText("[Name][...][Stock]")
+
         self.combo_color_reference.activated.connect(self.combo_activated)
         self.combo_color_text.activated.connect(self.combo_activated)
         self.combo_color_sells.activated.connect(self.combo_activated)
@@ -124,6 +135,7 @@ class Settings(QDialog):
         self.combo_color_average.activated.connect(self.combo_activated)
         self.combo_color_to_buy.activated.connect(self.combo_activated)
 
+        self.button_position_name.clicked.connect(self.toggle_name_position)
         self.button_delete_profile.clicked.connect(self.delete_clicked)
         self.button_new_profile.clicked.connect(self.new_profile_clicked)
         self.combobox_profiles.textActivated.connect(self.profile_selected)
@@ -191,5 +203,15 @@ class Settings(QDialog):
                     self.current_table = key
                     break
 
+    @Slot()
+    def toggle_name_position(self):
+        if self.name_end_position:
+            self.name_end_position = False
+            self.button_position_name.setText("[Name][...][Stock]")
+        else:
+            self.name_end_position = True
+            self.button_position_name.setText("[...][Name][Stock]")
+
+        self.messager.send_name_position.emit(self.name_end_position)
 
 
