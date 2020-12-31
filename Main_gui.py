@@ -102,13 +102,11 @@ class Main_gui(QMainWindow):
         self.line_edit_base_month.textEdited.connect(self.apply_new_base_value)
         self.button_generate_mail.clicked.connect(self.mail_generation_clicked)
 
-
     @Slot()
     def import_data_clicked(self):
         dialog = Data_dialog()
         dialog.messager.send_table.connect(self.apply_new_list)
         dialog.exec_()
-
 
     @Slot()
     def apply_new_list(self, new_dict):
@@ -289,6 +287,7 @@ class Main_gui(QMainWindow):
         sett = Settings(self.color_dict)
         sett.messager.new_selected_profile.connect(self.apply_new_profile_selected)
         sett.messager.profile_created.connect(self.apply_created_profile)
+        sett.messager.deleted_profile.connect(self.apply_deleted_profile)
         sett.messager.update_color_table.connect(self.update_color_table)
         sett.exec_()
 
@@ -310,13 +309,7 @@ class Main_gui(QMainWindow):
         try:
             with open(".\\files\\tables.json", "r") as data_json:  # LOAD TABLES
                 tables = json.load(data_json)
-
-                self.item_list.clear()
-                for key in tables[self.current_table]:  # PUSH ITEMS TO ITEM LIST
-                    item = Item(key, 0)
-                    item.sells_history = tables[self.current_table][key]["sells"]
-                    item.stock = tables[self.current_table][key]["stock"]
-                    self.item_list.append(item)
+                self.import_items_list(tables)
 
         except FileNotFoundError:  # ELSE PUSH DEFAULT TABLE
             items = {
@@ -357,28 +350,73 @@ class Main_gui(QMainWindow):
     def apply_new_profile_selected(self, new_profile_name):
         self.current_table = new_profile_name
         self.label_selected_profile.setText(new_profile_name)
-        self.settings_changed = True
         self.load_tables()
 
         if len(self.item_list) != 0:  # REFRESH TABLE
             self.build_table()
             self.calc_order()
         else:
-            self.table_widget_main.clear()
+            self.reset_table()
 
     @Slot(str)
     def apply_created_profile(self, new_profile_name):
         self.current_table = new_profile_name
-        self.settings_changed = True
         self.label_selected_profile.setText(new_profile_name)
 
         self.add_table_to_json(new_profile_name)
         self.load_tables()
+        self.month_count = 0
         if len(self.item_list) != 0:  # REFRESH TABLE
             self.build_table()
             self.calc_order()
         else:
-            self.table_widget_main.clear()
+            self.reset_table()
+
+    @Slot(str)
+    def apply_deleted_profile(self, profile_name):
+        with open(".\\files\\tables.json", "r") as data_json:
+            tables_list = json.load(data_json)
+
+        del tables_list[profile_name]
+
+        if self.current_table == profile_name:
+            self.item_list.clear()
+            if len(tables_list) > 0:
+                for key in tables_list:
+                    self.current_table = key
+                    break
+                self.import_items_list(tables_list)
+            else:
+                items = {
+                }
+                tables_list = {
+                    "Default": items
+                }
+                self.current_table = "Default"
+
+        with open(".\\files\\tables.json", "w") as data_json:
+            json.dump(tables_list, data_json)
+
+        self.label_selected_profile.setText(self.current_table)
+        if len(self.item_list) != 0:  # REFRESH TABLE
+            self.build_table()
+            self.calc_order()
+        else:
+            self.reset_table()
+
+    def import_items_list(self, tables_list):
+        self.item_list.clear()
+
+        for key in tables_list[self.current_table]:  # PUSH ITEMS TO ITEM LIST
+            item = Item(key, 0)
+            item.sells_history = tables_list[self.current_table][key]["sells"]
+            item.stock = tables_list[self.current_table][key]["stock"]
+            self.item_list.append(item)
+
+        for key in tables_list[self.current_table]:
+            self.month_count = len(tables_list[self.current_table][key]["sells"])
+            print(str(self.month_count))
+            break
 
     def add_table_to_json(self, talbe_name):
         with open(".\\files\\tables.json", "r") as data_json:
@@ -412,6 +450,11 @@ class Main_gui(QMainWindow):
     @Slot(str)
     def apply_name_mail_profile(self, new_name):
         self.current_mail_profile = new_name
+
+    def reset_table(self):
+        self.table_widget_main.clear()
+        self.table_widget_main.setColumnCount(0)
+        self.table_widget_main.setRowCount(0)
 
     def closeEvent(self, event):
         self.save_settings()

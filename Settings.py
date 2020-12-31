@@ -10,6 +10,7 @@ class Communication(QObject):
     new_selected_profile = Signal(str)
     profile_created = Signal(str)
     update_color_table = Signal(dict)
+    deleted_profile = Signal(str)
 
 
 class Settings(QDialog):
@@ -17,6 +18,7 @@ class Settings(QDialog):
         QDialog.__init__(self)
         self.color_dict = new_color_dict
         self.current_table = "Default"
+        self.profile_list = {}
         self.messager = Communication()
         self.color_list = ["#000000", "#2A363B", "#546e7a", "#757575", "#6d4c41", "#f4511e", "#fb8c00", "#ffb300",
                            "#fdd835", "#c0ca33", "#7cb342", "#43a047", "#00897b", "#00acc1",
@@ -122,6 +124,7 @@ class Settings(QDialog):
         self.combo_color_average.activated.connect(self.combo_activated)
         self.combo_color_to_buy.activated.connect(self.combo_activated)
 
+        self.button_delete_profile.clicked.connect(self.delete_clicked)
         self.button_new_profile.clicked.connect(self.new_profile_clicked)
         self.combobox_profiles.textActivated.connect(self.profile_selected)
 
@@ -136,6 +139,7 @@ class Settings(QDialog):
             tables = json.load(data_json)
             for key in tables:
                 self.combobox_profiles.addItem(key)
+            self.profile_list = tables
 
         self.combobox_profiles.setCurrentText(self.current_table)
 
@@ -158,11 +162,34 @@ class Settings(QDialog):
         self.combobox_profiles.addItem(name)
         self.combobox_profiles.setCurrentText(name)
 
-
     def combo_activated(self, id_color):
         combo = self.sender()
         combo.setStyleSheet("background-color: {0};".format(self.color_list[id_color]))
 
         self.color_dict[combo.objectName()] = self.color_list[id_color]
         self.messager.update_color_table.emit(self.color_dict)
+
+    @Slot()
+    def delete_clicked(self):
+        box = QMessageBox(QMessageBox.Warning, "Delete {0}".format(self.current_table), "Do you really want to delete {0} ?".format(self.current_table)
+                          , QMessageBox.Yes)
+        box.addButton(QMessageBox.No)
+        rep = box.exec_()
+        if rep == QMessageBox.Yes:
+            self.messager.deleted_profile.emit(self.current_table)
+
+            del self.profile_list[self.current_table]
+
+            self.combobox_profiles.clear()
+            if len(self.profile_list) == 0:
+                self.current_table = "Default"
+                self.combobox_profiles.addItem("Default")
+            else:
+                for key in self.profile_list:
+                    self.combobox_profiles.addItem(key)
+                for key in self.profile_list:
+                    self.current_table = key
+                    break
+
+
 
