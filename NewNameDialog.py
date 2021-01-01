@@ -39,6 +39,8 @@ class NewNameDialog(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         Utils.style_click_button(self.button, "#7cb342")
 
+        self.button.setCursor(Qt.PointingHandCursor)
+
         self.button.clicked.connect(self.button_clicked)
 
 

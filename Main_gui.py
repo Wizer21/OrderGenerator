@@ -23,6 +23,8 @@ class Main_gui(QMainWindow):
             "Name": "#2A363B",
             "Sells": "#fb8c00",
             "Stock": "#1e88e5",
+            "Buyp": "#7cb342",
+            "Sellp": "#00897b",
             "Average": "#5e35b1",
             "ToBuy": "#e53935"
         }
@@ -48,16 +50,25 @@ class Main_gui(QMainWindow):
         self.label_sustain_step = QLabel("month", self)
         self.label_based_step = QLabel("month", self)
 
+        self.widget_foot = QWidget(self)
+        self.layout_foot = QGridLayout(self)
+        self.label_total_buyp = QLabel("BuyP", self)
+        self.label_display_buyp = QLabel("0", self)
+        self.label_total_sellP = QLabel("SellP", self)
+        self.label_display_sellP = QLabel("0", self)
+        self.label_margin = QLabel("Margin", self)
+        self.label_display_margin = QLabel("0", self)
+
         self.table_widget_main = QTableWidget(self)
         self.headers = self.table_widget_main.horizontalHeader()
 
         self.build()
         self.load_settings()
         self.load_tables()
-
         if len(self.item_list) != 0:
             self.build_table()
             self.calc_order()
+            self.refresh_prices_values()
 
         Utils.resize_from_resolution(self, 0.6, 0.6)
 
@@ -82,9 +93,21 @@ class Main_gui(QMainWindow):
 
         self.layout_main.addWidget(self.table_widget_main, 1, 0)
 
+        self.layout_main.addWidget(self.widget_foot, 2, 0)
+        self.widget_foot.setLayout(self.layout_foot)
+        self.layout_foot.addWidget(self.label_total_buyp, 0, 0, Qt.AlignRight)
+        self.layout_foot.addWidget(self.label_display_buyp, 0, 1, Qt.AlignLeft)
+        self.layout_foot.addWidget(self.label_total_sellP, 0, 2, Qt.AlignRight)
+        self.layout_foot.addWidget(self.label_display_sellP, 0, 3, Qt.AlignLeft)
+        self.layout_foot.addWidget(self.label_margin, 0, 4, Qt.AlignRight)
+        self.layout_foot.addWidget(self.label_display_margin, 0, 5, Qt.AlignLeft)
+
         # WIDGETS PARAMETERS
         self.setWindowTitle("Table")
         self.setWindowIcon(Utils.get_pixmap("logo"))
+        self.layout_top_panel.setColumnStretch(0, 1)
+        self.widget_main.setContentsMargins(10, 10, 10, 10)
+
         Utils.resize_font(self.label_selected_profile, 2.5)
         Utils.set_icon(self.button_generate_mail, "mail", 2)
         Utils.set_icon(self.button_import_data, "import_data", 2)
@@ -92,15 +115,17 @@ class Main_gui(QMainWindow):
         Utils.style_click_button(self.button_generate_mail, "#1976d2")
         Utils.main_menu_button_size(self.button_import_data, 0.08)
         Utils.main_menu_button_size(self.button_generate_mail, 0.08)
+        Utils.resize_font(self.label_display_buyp, 2)
+        Utils.resize_font(self.label_display_sellP, 2)
+        Utils.resize_font(self.label_display_margin, 2)
 
-        self.headers.setSectionsMovable(True)
         self.headers.setCursor(Qt.PointingHandCursor)
-
-        self.layout_top_panel.setColumnStretch(0, 1)
-        self.widget_main.setContentsMargins(10, 10, 10, 10)
-        self.table_widget_main.setSortingEnabled(True)
         self.button_import_data.setCursor(Qt.PointingHandCursor)
         self.button_generate_mail.setCursor(Qt.PointingHandCursor)
+
+        self.table_widget_main.setSortingEnabled(True)
+        self.headers.setSectionsMovable(True)
+
         self.button_import_data.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_generate_mail.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
@@ -201,11 +226,8 @@ class Main_gui(QMainWindow):
                     self.item_list[i].sells_history.append(0)
 
         self.month_count += added_months
-        if len(self.item_list) != 0:
-            self.build_table()
-            self.calc_order()
-            self.save_table()
-
+        self.reset_table()
+        self.save_table()
 
     def build_table(self):
         self.table_widget_main.clear()
@@ -262,7 +284,7 @@ class Main_gui(QMainWindow):
             if self.show_buyp:
                 buy = QTableWidgetItem(str(self.item_list[i].buy_price))
                 buy.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-                buy.setBackgroundColor(QColor(self.color_dict["Reference"]))
+                buy.setBackgroundColor(QColor(self.color_dict["Buyp"]))
 
                 self.table_widget_main.setItem(i, column, buy)
                 column += 1
@@ -270,12 +292,10 @@ class Main_gui(QMainWindow):
             if self.show_sellp:
                 sell = QTableWidgetItem(str(self.item_list[i].sell_price))
                 sell.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-                sell.setBackgroundColor(QColor(self.color_dict["Reference"]))
+                sell.setBackgroundColor(QColor(self.color_dict["Sellp"]))
 
                 self.table_widget_main.setItem(i, column, sell)
                 column += 1
-
-
 
         headers = []
         if self.show_ref:
@@ -356,9 +376,7 @@ class Main_gui(QMainWindow):
         else:
             self.sustain_value = float(str_value)
 
-        if len(self.item_list) != 0:
-            self.build_table()
-            self.calc_order()
+        self.reset_table()
 
     @Slot(str)
     def apply_new_base_value(self, value):
@@ -367,9 +385,7 @@ class Main_gui(QMainWindow):
         else:
             self.used_month = int(value)
 
-        if len(self.item_list) != 0:
-            self.build_table()
-            self.calc_order()
+        self.reset_table()
 
     @Slot()
     def open_options(self):
@@ -456,11 +472,7 @@ class Main_gui(QMainWindow):
         self.label_selected_profile.setText(new_profile_name)
         self.load_tables()
 
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
-        else:
-            self.reset_table()
+        self.reset_table()
 
     @Slot(str)
     def apply_created_profile(self, new_profile_name):
@@ -470,11 +482,7 @@ class Main_gui(QMainWindow):
         self.add_table_to_json(new_profile_name)
         self.load_tables()
         self.month_count = 0
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
-        else:
-            self.reset_table()
+        self.reset_table()
 
     @Slot(str)
     def apply_deleted_profile(self, profile_name):
@@ -503,11 +511,7 @@ class Main_gui(QMainWindow):
             json.dump(tables_list, data_json)
 
         self.label_selected_profile.setText(self.current_table)
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
-        else:
-            self.reset_table()
+        self.reset_table()
 
     def import_items_list(self, tables_list):
         self.item_list.clear()
@@ -545,9 +549,7 @@ class Main_gui(QMainWindow):
     @Slot(dict)
     def update_color_table(self, new_color_dict):
         self.color_dict = new_color_dict
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
+        self.reset_table()
 
     @Slot()
     def mail_generation_clicked(self):
@@ -563,34 +565,46 @@ class Main_gui(QMainWindow):
         self.table_widget_main.clear()
         self.table_widget_main.setColumnCount(0)
         self.table_widget_main.setRowCount(0)
+        if len(self.item_list) != 0:  # REFRESH TABLE
+            self.build_table()
+            self.calc_order()
+            self.refresh_prices_values()
 
     @Slot(bool)
     def set_name_position(self, is_name_at_the_end):
         self.name_columun_end = is_name_at_the_end
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
+        self.reset_table()
 
     @Slot(bool)
     def set_show_ref(self, is_ref_show):
         self.show_ref = is_ref_show
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
+        self.reset_table()
 
     @Slot(bool)
     def set_show_buyp(self, is_buyp_show):
         self.show_buyp = is_buyp_show
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
+        self.reset_table()
 
     @Slot(bool)
     def set_show_sellp(self, is_sellp_show):
         self.show_sellp = is_sellp_show
-        if len(self.item_list) != 0:  # REFRESH TABLE
-            self.build_table()
-            self.calc_order()
+        self.reset_table()
+
+    def refresh_prices_values(self):
+        if self.show_buyp or self.show_sellp:
+            self.widget_foot.setVisible(True)
+            total_buyp = 0
+            total_sellp = 0
+
+            for i in self.item_list:
+                total_buyp += i.buy_price * i.to_buy
+                total_sellp += i.sell_price * i.to_buy
+
+            self.label_display_buyp.setText(str(round(total_buyp, 2)))
+            self.label_display_sellP.setText(str(round(total_sellp, 2)))
+            self.label_display_margin.setText(str(round(total_sellp - total_buyp, 2)))
+        else:
+            self.widget_foot.setVisible(False)
 
     def closeEvent(self, event):
         self.save_settings()

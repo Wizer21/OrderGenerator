@@ -55,6 +55,8 @@ class Settings(QDialog):
         self.combo_color_text = QComboBox(self)
         self.combo_color_sells = QComboBox(self)
         self.combo_color_stock = QComboBox(self)
+        self.combo_color_buyp = QComboBox(self)
+        self.combo_color_sellp = QComboBox(self)
         self.combo_color_average = QComboBox(self)
         self.combo_color_to_buy = QComboBox(self)
 
@@ -89,9 +91,11 @@ class Settings(QDialog):
         self.layout_colors.addWidget(self.combo_color_reference, 0, 0)
         self.layout_colors.addWidget(self.combo_color_text, 0, 1)
         self.layout_colors.addWidget(self.combo_color_sells, 0, 2)
-        self.layout_colors.addWidget(self.combo_color_stock, 1, 0)
-        self.layout_colors.addWidget(self.combo_color_average, 1, 1)
-        self.layout_colors.addWidget(self.combo_color_to_buy, 1, 2)
+        self.layout_colors.addWidget(self.combo_color_stock, 0, 3)
+        self.layout_colors.addWidget(self.combo_color_buyp, 1, 0)
+        self.layout_colors.addWidget(self.combo_color_sellp, 1, 1)
+        self.layout_colors.addWidget(self.combo_color_average, 1, 2)
+        self.layout_colors.addWidget(self.combo_color_to_buy, 1, 3)
 
         # WIDGETS PARAMETERS
         self.setWindowTitle("Settings")
@@ -110,11 +114,29 @@ class Settings(QDialog):
         Utils.style_click_button(self.button_new_profile, "#689f38")
         Utils.style_click_button(self.button_delete_profile, "#d32f2f")
 
+        self.combobox_profiles.setCursor(Qt.PointingHandCursor)
+        self.button_new_profile.setCursor(Qt.PointingHandCursor)
+        self.button_delete_profile.setCursor(Qt.PointingHandCursor)
+        self.button_show_ref.setCursor(Qt.PointingHandCursor)
+        self.button_show_buyp.setCursor(Qt.PointingHandCursor)
+        self.button_show_sellp.setCursor(Qt.PointingHandCursor)
+        self.button_font_chooser.setCursor(Qt.PointingHandCursor)
+        self.combo_color_reference.setCursor(Qt.PointingHandCursor)
+        self.combo_color_text.setCursor(Qt.PointingHandCursor)
+        self.combo_color_sells.setCursor(Qt.PointingHandCursor)
+        self.combo_color_stock.setCursor(Qt.PointingHandCursor)
+        self.combo_color_buyp.setCursor(Qt.PointingHandCursor)
+        self.combo_color_sellp.setCursor(Qt.PointingHandCursor)
+        self.combo_color_average.setCursor(Qt.PointingHandCursor)
+        self.combo_color_to_buy.setCursor(Qt.PointingHandCursor)
+
         for i in range(len(self.color_list)):
             self.combo_color_reference.addItem("Reference")
             self.combo_color_text.addItem("Name")
             self.combo_color_sells.addItem("Sells")
             self.combo_color_stock.addItem("Stock")
+            self.combo_color_buyp.addItem("Buyp")
+            self.combo_color_sellp.addItem("Sellp")
             self.combo_color_average.addItem("Average")
             self.combo_color_to_buy.addItem("To buy")
 
@@ -122,6 +144,8 @@ class Settings(QDialog):
             self.combo_color_text.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
             self.combo_color_sells.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
             self.combo_color_stock.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+            self.combo_color_buyp.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
+            self.combo_color_sellp.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
             self.combo_color_average.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
             self.combo_color_to_buy.setItemData(i, QColor(self.color_list[i]), Qt.BackgroundRole)
 
@@ -129,6 +153,8 @@ class Settings(QDialog):
         self.combo_color_text.setObjectName("Name")
         self.combo_color_sells.setObjectName("Sells")
         self.combo_color_stock.setObjectName("Stock")
+        self.combo_color_buyp.setObjectName("Buyp")
+        self.combo_color_sellp.setObjectName("Sellp")
         self.combo_color_average.setObjectName("Average")
         self.combo_color_to_buy.setObjectName("ToBuy")
 
@@ -136,6 +162,8 @@ class Settings(QDialog):
         self.combo_color_text.setStyleSheet("background-color: {0};".format(self.color_dict["Name"]))
         self.combo_color_sells.setStyleSheet("background-color: {0};".format(self.color_dict["Sells"]))
         self.combo_color_stock.setStyleSheet("background-color: {0};".format(self.color_dict["Stock"]))
+        self.combo_color_buyp.setStyleSheet("background-color: {0};".format(self.color_dict["Buyp"]))
+        self.combo_color_sellp.setStyleSheet("background-color: {0};".format(self.color_dict["Sellp"]))
         self.combo_color_average.setStyleSheet("background-color: {0};".format(self.color_dict["Average"]))
         self.combo_color_to_buy.setStyleSheet("background-color: {0};".format(self.color_dict["ToBuy"]))
 
@@ -170,6 +198,8 @@ class Settings(QDialog):
         self.combo_color_text.activated.connect(self.combo_activated)
         self.combo_color_sells.activated.connect(self.combo_activated)
         self.combo_color_stock.activated.connect(self.combo_activated)
+        self.combo_color_buyp.activated.connect(self.combo_activated)
+        self.combo_color_sellp.activated.connect(self.combo_activated)
         self.combo_color_average.activated.connect(self.combo_activated)
         self.combo_color_to_buy.activated.connect(self.combo_activated)
 
@@ -287,5 +317,3 @@ class Settings(QDialog):
             Utils.set_icon(self.button_show_sellp, "eyeopen", 1)
 
         self.messager.send_is_show_sellp.emit(self.show_sellp)
-
-    def refresh_prices_values(self):

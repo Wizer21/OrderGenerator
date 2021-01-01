@@ -122,7 +122,7 @@ class Data_dialog(QDialog):
 
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
             combo = QComboBox(self)
-            combo.addItems(["Skip", "Name", "Ref.", "Sells", "Stock", "Buy P.", "Sell P."])
+            combo.addItems(["Skip", "Ref.", "Name", "Sells", "Stock", "Buy P.", "Sell P."])
 
             self.table_import_view.setCellWidget(0, i + 1, combo)
             combo.setCursor(Qt.PointingHandCursor)
@@ -132,7 +132,7 @@ class Data_dialog(QDialog):
             combo.textActivated.connect(self.combo_top_changed)
             self.list_combobox.append(combo)
 
-        self.list_combobox[0].setCurrentIndex(1)
+        self.list_combobox[0].setCurrentIndex(2)
         self.list_combobox[len(self.list_combobox) - 1].setCurrentIndex(4)
         self.style_boxes()
 
@@ -317,10 +317,12 @@ class Data_dialog(QDialog):
             self.paint_box(i, i.currentText())
 
             i.setItemData(0, QColor("#000000"), Qt.BackgroundRole)
-            i.setItemData(1, QColor(self.color_dict["Name"]), Qt.BackgroundRole)
-            i.setItemData(2, QColor(self.color_dict["Reference"]), Qt.BackgroundRole)
+            i.setItemData(1, QColor(self.color_dict["Reference"]), Qt.BackgroundRole)
+            i.setItemData(2, QColor(self.color_dict["Name"]), Qt.BackgroundRole)
             i.setItemData(3, QColor(self.color_dict["Sells"]), Qt.BackgroundRole)
             i.setItemData(4, QColor(self.color_dict["Stock"]), Qt.BackgroundRole)
+            i.setItemData(5, QColor(self.color_dict["Buyp"]), Qt.BackgroundRole)
+            i.setItemData(6, QColor(self.color_dict["Sellp"]), Qt.BackgroundRole)
 
     def row_clicked(self):
         button = self.sender()
