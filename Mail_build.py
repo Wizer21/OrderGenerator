@@ -57,7 +57,7 @@ class Mail_build(QDialog):
         self.load_pattern()
         self.build()
         self.display_mail_from_pattern()
-        self.resize(1000, 1000)
+        Utils.resize_from_resolution(self, 0.40, 0.50)
 
     def build(self):
         # STRUCTURE
@@ -99,7 +99,7 @@ class Mail_build(QDialog):
         self.setWindowIcon(Utils.get_pixmap("mail_dark"))
         self.setAttribute(Qt.WA_DeleteOnClose)
 
-        Utils.resize_font(self.label_title, 2)
+        Utils.resize_font(self.label_title, 2.5)
 
         self.button_clipboard.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

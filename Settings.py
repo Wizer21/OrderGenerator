@@ -5,18 +5,18 @@ import json
 from NewNameDialog import *
 from Utils import *
 
-
 class Communication(QObject):
     new_selected_profile = Signal(str)
     profile_created = Signal(str)
     update_color_table = Signal(dict)
     deleted_profile = Signal(str)
-    send_name_position = Signal(bool)
     send_is_show_ref = Signal(bool)
+    send_is_show_buyp = Signal(bool)
+    send_is_show_sellp = Signal(bool)
 
 
 class Settings(QDialog):
-    def __init__(self, new_color_dict, is_name_end_position, is_show_ref):
+    def __init__(self, new_color_dict, is_show_ref, is_show_buyp, is_show_sellp):
         QDialog.__init__(self)
         self.color_dict = new_color_dict
         self.current_table = "Default"
@@ -26,8 +26,9 @@ class Settings(QDialog):
                            "#fdd835", "#c0ca33", "#7cb342", "#43a047", "#00897b", "#00acc1",
                            "#039be5", "#1e88e5", "#3949ab", "#5e35b1", "#8e24aa", "#d81b60",
                            "#e53935"]
-        self.name_end_position = is_name_end_position
         self.show_ref = is_show_ref
+        self.show_buyp = is_show_buyp
+        self.show_sellp = is_show_sellp
 
         self.layout_main = QGridLayout(self)
         self.label_title = QLabel("Settings", self)
@@ -41,10 +42,12 @@ class Settings(QDialog):
         self.layout_right = QVBoxLayout(self)
         self.label_font = QLabel("Font", self)
         self.button_font_chooser = QPushButton("Open Font Chooser", self)
-        self.label_name_end = QLabel("Column [Name] position", self)
-        self.button_position_name = QPushButton(self)
         self.label_show_ref = QLabel("Show reference", self)
         self.button_show_ref = QPushButton(self)
+        self.label_buyp = QLabel("Show buy price", self)
+        self.button_show_buyp = QPushButton(self)
+        self.label_sellp = QLabel("Show sell price", self)
+        self.button_show_sellp = QPushButton(self)
 
         self.group_color = QGroupBox("Table Theme", self)
         self.layout_colors = QGridLayout(self)
@@ -56,6 +59,7 @@ class Settings(QDialog):
         self.combo_color_to_buy = QComboBox(self)
 
         self.build()
+        Utils.resize_from_resolution(self, 0.25, 0.3)
 
 
     def build(self):
@@ -73,10 +77,12 @@ class Settings(QDialog):
         self.layout_left.addWidget(self.button_font_chooser, 4, 0, 1, 2)
 
         self.layout_main.addLayout(self.layout_right, 1, 1)
-        self.layout_right.addWidget(self.label_name_end)
-        self.layout_right.addWidget(self.button_position_name)
         self.layout_right.addWidget(self.label_show_ref)
         self.layout_right.addWidget(self.button_show_ref)
+        self.layout_right.addWidget(self.label_buyp)
+        self.layout_right.addWidget(self.button_show_buyp)
+        self.layout_right.addWidget(self.label_sellp)
+        self.layout_right.addWidget(self.button_show_sellp)
 
         self.layout_main.addWidget(self.group_color, 2, 0, 1, 2)
         self.group_color.setLayout(self.layout_colors)
@@ -133,10 +139,6 @@ class Settings(QDialog):
         self.combo_color_average.setStyleSheet("background-color: {0};".format(self.color_dict["Average"]))
         self.combo_color_to_buy.setStyleSheet("background-color: {0};".format(self.color_dict["ToBuy"]))
 
-        if self.name_end_position:
-            self.button_position_name.setText("[...][Name][Stock]")
-        else:
-            self.button_position_name.setText("[Name][...][Stock]")
         if self.show_ref:
             self.button_show_ref.setText("Show")
             Utils.style_click_button(self.button_show_ref, "#ffa000")
@@ -146,6 +148,24 @@ class Settings(QDialog):
             Utils.style_click_button(self.button_show_ref, "#455a64")
             Utils.set_icon(self.button_show_ref, "eyeclose", 1)
 
+        if self.show_buyp:
+            self.button_show_buyp.setText("Show")
+            Utils.style_click_button(self.button_show_buyp, "#ffa000")
+            Utils.set_icon(self.button_show_buyp, "eyeopen", 1)
+        else:
+            self.button_show_buyp.setText("Hide")
+            Utils.style_click_button(self.button_show_buyp, "#455a64")
+            Utils.set_icon(self.button_show_buyp, "eyeclose", 1)
+
+        if self.show_sellp:
+            self.button_show_sellp.setText("Show")
+            Utils.style_click_button(self.button_show_sellp, "#ffa000")
+            Utils.set_icon(self.button_show_sellp, "eyeopen", 1)
+        else:
+            self.button_show_sellp.setText("Hide")
+            Utils.style_click_button(self.button_show_sellp, "#455a64")
+            Utils.set_icon(self.button_show_sellp, "eyeclose", 1)
+
         self.combo_color_reference.activated.connect(self.combo_activated)
         self.combo_color_text.activated.connect(self.combo_activated)
         self.combo_color_sells.activated.connect(self.combo_activated)
@@ -154,7 +174,8 @@ class Settings(QDialog):
         self.combo_color_to_buy.activated.connect(self.combo_activated)
 
         self.button_show_ref.clicked.connect(self.toggle_show_ref)
-        self.button_position_name.clicked.connect(self.toggle_name_position)
+        self.button_show_buyp.clicked.connect(self.toggle_show_buyp)
+        self.button_show_sellp.clicked.connect(self.toggle_show_sellp)
         self.button_delete_profile.clicked.connect(self.delete_clicked)
         self.button_new_profile.clicked.connect(self.new_profile_clicked)
         self.combobox_profiles.textActivated.connect(self.profile_selected)
@@ -223,17 +244,6 @@ class Settings(QDialog):
                     break
 
     @Slot()
-    def toggle_name_position(self):
-        if self.name_end_position:
-            self.name_end_position = False
-            self.button_position_name.setText("[Name][...][Stock]")
-        else:
-            self.name_end_position = True
-            self.button_position_name.setText("[...][Name][Stock]")
-
-        self.messager.send_name_position.emit(self.name_end_position)
-
-    @Slot()
     def toggle_show_ref(self):
         if self.show_ref:
             self.show_ref = False
@@ -248,3 +258,34 @@ class Settings(QDialog):
 
         self.messager.send_is_show_ref.emit(self.show_ref)
 
+    @Slot()
+    def toggle_show_buyp(self):
+        if self.show_buyp:
+            self.show_buyp = False
+            self.button_show_buyp.setText("Hide")
+            Utils.style_click_button(self.button_show_buyp, "#455a64")
+            Utils.set_icon(self.button_show_buyp, "eyeclose", 1)
+        else:
+            self.show_buyp = True
+            self.button_show_buyp.setText("Show")
+            Utils.style_click_button(self.button_show_buyp, "#ffa000")
+            Utils.set_icon(self.button_show_buyp, "eyeopen", 1)
+
+        self.messager.send_is_show_buyp.emit(self.show_buyp)
+
+    @Slot()
+    def toggle_show_sellp(self):
+        if self.show_sellp:
+            self.show_sellp = False
+            self.button_show_sellp.setText("Hide")
+            Utils.style_click_button(self.button_show_sellp, "#455a64")
+            Utils.set_icon(self.button_show_sellp, "eyeclose", 1)
+        else:
+            self.show_sellp = True
+            self.button_show_sellp.setText("Show")
+            Utils.style_click_button(self.button_show_sellp, "#ffa000")
+            Utils.set_icon(self.button_show_sellp, "eyeopen", 1)
+
+        self.messager.send_is_show_sellp.emit(self.show_sellp)
+
+    def refresh_prices_values(self):

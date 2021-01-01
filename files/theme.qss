@@ -176,10 +176,7 @@ QTableWidget::item:selected {
 /* ------------------------------ */
 QComboBox {
   padding: 1px 18px 1px 3px;
-  min-width: 6em;
   border: 0px solid yellow;
-  min-height: 35px;
-  margin: 5px;
   background-color: #262626;
 }
 QComboBox:hover {

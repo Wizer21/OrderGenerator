@@ -2,7 +2,7 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from Utils import *
-
+import locale
 
 class Connection(QObject):
     send_table = Signal(dict)
@@ -35,7 +35,7 @@ class Data_dialog(QDialog):
         self.table_import_view = QTableWidget(self)
 
         self.build()
-        self.resize(1200, 700)
+        Utils.resize_from_resolution(self, 0.6, 0.6)
 
     def build(self):
         # STRUCTURE
@@ -122,7 +122,7 @@ class Data_dialog(QDialog):
 
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
             combo = QComboBox(self)
-            combo.addItems(["Skip", "Name", "Ref.", "Sells", "Stock"])
+            combo.addItems(["Skip", "Name", "Ref.", "Sells", "Stock", "Buy P.", "Sell P."])
 
             self.table_import_view.setCellWidget(0, i + 1, combo)
             combo.setCursor(Qt.PointingHandCursor)
@@ -189,6 +189,8 @@ class Data_dialog(QDialog):
             "Sells": [],
             "Reference": [],
             "Stock": [],
+            "Buyprice": [],
+            "Sellprice": [],
             "Add Items": self.add_new_items
         }
 
@@ -226,6 +228,40 @@ class Data_dialog(QDialog):
                         self.label_error.setText("Column {0} must be numeric".format(y + 1))
                         return
                 final_data["Stock"] = my_list
+
+            elif self.list_combobox[i].currentText() == "Buy P.":
+                my_list = []
+                for y in range(len(self.table)):
+                    value = self.table[y][i]
+                    value = value.replace("€", "")
+                    value = value.replace("$", "")
+                    value = value.replace("£", "")
+                    value = value.replace(",", ".")
+                    value = value.replace(Utils.get_win_separator(), ".")
+                    try:
+                        my_list.append(float(value))
+                    except ValueError:
+                        self.table = table_save.copy()
+                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        return
+                final_data["Buyprice"] = my_list
+
+            elif self.list_combobox[i].currentText() == "Sell P.":
+                my_list = []
+                for y in range(len(self.table)):
+                    value = self.table[y][i]
+                    value = value.replace("€", "")
+                    value = value.replace("$", "")
+                    value = value.replace("£", "")
+                    value = value.replace(",", ".")
+                    value = value.replace(Utils.get_win_separator(), ".")
+                    try:
+                        my_list.append(float(value))
+                    except ValueError:
+                        self.table = table_save.copy()
+                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        return
+                final_data["Sellprice"] = my_list
 
         self.messager.send_table.emit(final_data)
         self.close()
@@ -267,6 +303,12 @@ class Data_dialog(QDialog):
                 self.list_combobox[i].setCurrentText("Skip")
                 return
             if self.list_combobox[i].currentText() == "Stock" and combo_text == "Stock":
+                self.list_combobox[i].setCurrentText("Skip")
+                return
+            if self.list_combobox[i].currentText() == "Buy P." and combo_text == "Buy P.":
+                self.list_combobox[i].setCurrentText("Skip")
+                return
+            if self.list_combobox[i].currentText() == "Sell P." and combo_text == "Sell P.":
                 self.list_combobox[i].setCurrentText("Skip")
                 return
 

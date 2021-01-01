@@ -15,14 +15,14 @@ if __name__ == "__main__":
     rec = QRect(lScreenGeom)
     resolution = [rec.width(), rec.height()]
 
-    pointsize = int(resolution[0] / 110)
-    pixelsize = "QWidget{ font-size:" + str(pointsize) + "px;}"
+    font_size = int(resolution[0] / 110)
+    font_qss = "QWidget{ font-size:" + str(font_size) + "px;}"
 
     with open(".\\files\\theme.qss") as my_file:
         theme = my_file.read()
-        app.setStyleSheet(theme + pixelsize)
+        app.setStyleSheet(font_qss + theme)
 
-    utils = Utils(pointsize)
+    utils = Utils(font_size, resolution)
 
     main_gui = Main_gui()
     main_gui.show()

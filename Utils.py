@@ -1,20 +1,30 @@
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
+import locale
 
 pixelsize = 0
 pixmap_dict = {}
 map_size = [0, 0]
 icon_size = [0, 0]
+resolution = [0, 0]
+win_separator = 0
 
 class Utils:
-    def __init__(self, new_pixelsize):
+    def __init__(self, new_pixelsize, new_resolution):
         global pixelsize
         global pixmap_dict
         global map_size
+        global resolution
+        global win_separator
 
-        map_size = [50, 50]
+        width_from_rez = int(new_resolution[1] / 40)
+        map_size = [width_from_rez, width_from_rez]
         icon_size = [int(map_size[0] * 2), int(map_size[1] * 2)]
+        resolution = new_resolution
+
+        locale.setlocale(locale.LC_ALL, '')
+        win_separator = locale.localeconv()['decimal_point']
 
         pixelsize = new_pixelsize
         pixmap_dict = {
@@ -77,3 +87,16 @@ class Utils:
                 }"""
         widget.setStyleSheet(style.replace("<color>", color))
 
+
+    @staticmethod
+    def resize_from_resolution(window, ratio_w, ratio_h):
+        window.resize(int(resolution[0] * ratio_w), int(resolution[1] * ratio_h))
+
+
+    @staticmethod
+    def main_menu_button_size(button, ratio_w):
+        button.setFixedWidth(int(resolution[0] * ratio_w))
+
+    @staticmethod
+    def get_win_separator():
+        return win_separator
