@@ -100,3 +100,9 @@ class Utils:
     @staticmethod
     def get_win_separator():
         return win_separator
+
+    @staticmethod
+    def format_large_numbers(value):
+        value = round(value, 2)
+        value = str(f"{value:_}")
+        return value.replace("_", " ")

@@ -600,9 +600,9 @@ class Main_gui(QMainWindow):
                 total_buyp += i.buy_price * i.to_buy
                 total_sellp += i.sell_price * i.to_buy
 
-            self.label_display_buyp.setText(str(round(total_buyp, 2)))
-            self.label_display_sellP.setText(str(round(total_sellp, 2)))
-            self.label_display_margin.setText(str(round(total_sellp - total_buyp, 2)))
+            self.label_display_buyp.setText(Utils.format_large_numbers(total_buyp))
+            self.label_display_sellP.setText(Utils.format_large_numbers(total_sellp))
+            self.label_display_margin.setText(Utils.format_large_numbers(total_sellp - total_buyp))
         else:
             self.widget_foot.setVisible(False)
 
