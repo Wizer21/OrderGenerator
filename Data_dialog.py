@@ -14,6 +14,7 @@ class Data_dialog(QDialog):
         self.messager = Connection()
         self.add_new_items = True
         self.list_combobox = []
+        self.list_rows_button = []
         self.table = [[]]
         self.update_clip = True
         self.color_dict = new_color_dict
@@ -35,7 +36,6 @@ class Data_dialog(QDialog):
 
         self.build()
         self.resize(1200, 700)
-
 
     def build(self):
         # STRUCTURE
@@ -73,6 +73,7 @@ class Data_dialog(QDialog):
         Utils.style_click_button(self.button_paste, "#1976d2")
         Utils.style_click_button(self.button_push, "#689f38")
         Utils.style_click_button(self.button_add_clear, "#ffa000")
+        self.label_error.setStyleSheet("color: #d32f2f;")
 
         self.button_paste.clicked.connect(self.import_clicked)
         self.button_push.clicked.connect(self.push_button_clicked)
@@ -116,14 +117,14 @@ class Data_dialog(QDialog):
                 current_item += text[i]
             i += 1
 
-        self.table_import_view.setColumnCount(len(self.table[0]))  # SET ROW/COLUMN COUNT
+        self.table_import_view.setColumnCount(len(self.table[0]) + 1)  # SET ROW/COLUMN COUNT
         self.table_import_view.setRowCount(len(self.table) + 1)
 
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
             combo = QComboBox(self)
             combo.addItems(["Skip", "Name", "Ref.", "Sells", "Stock"])
 
-            self.table_import_view.setCellWidget(0, i, combo)
+            self.table_import_view.setCellWidget(0, i + 1, combo)
             combo.setCursor(Qt.PointingHandCursor)
             combo.setObjectName(str(i))
             combo.setCurrentIndex(3)
@@ -135,12 +136,26 @@ class Data_dialog(QDialog):
         self.list_combobox[len(self.list_combobox) - 1].setCurrentIndex(4)
         self.style_boxes()
 
+        for i in range(len(self.table)):
+            button = QPushButton()
+            button.setObjectName(str(i) + "y")
+
+            Utils.style_click_button(button, "#689f38")
+            Utils.set_icon(button, "yes", 1)
+            button.setCursor(Qt.PointingHandCursor)
+
+            self.list_rows_button.append(button)
+            self.table_import_view.setCellWidget(i + 1, 0, button)
+            button.clicked.connect(self.row_clicked)
+
+        self.table_import_view.setColumnWidth(0, 1)
+
         for i in range(len(self.table)):  # PUSH DATA
             for y in range(len(self.table[i])):
                 item = QTableWidgetItem(self.table[i][y])
                 item.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
 
-                self.table_import_view.setItem(i + 1, y, item)
+                self.table_import_view.setItem(i + 1, y + 1, item)
 
     @Slot()
     def push_button_clicked(self):
@@ -155,6 +170,18 @@ class Data_dialog(QDialog):
                 continue
         if name_count < 1:
             self.label_error.setText("Need at least one column name")
+            return
+
+        table_save = self.table.copy()
+
+        self.list_rows_button.reverse()
+        for i in self.list_rows_button:
+            obj_name = i.objectName()
+            if obj_name[1] == "n":
+                del self.table[int(obj_name[0])]
+        if len(self.table) == 0:
+            self.table = table_save.copy()
+            self.label_error.setText("Nothing imported")
             return
 
         final_data = {
@@ -174,8 +201,13 @@ class Data_dialog(QDialog):
 
             elif self.list_combobox[i].currentText() == "Sells":
                 my_list = []
-                for y in self.table:
-                    my_list.append(int(y[i]))
+                for y in range(len(self.table)):
+                    try:
+                        my_list.append(int(self.table[y][i]))
+                    except ValueError:
+                        self.table = table_save.copy()
+                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        return
                 final_data["Sells"].append(my_list)
 
             elif self.list_combobox[i].currentText() == "Ref.":
@@ -186,8 +218,13 @@ class Data_dialog(QDialog):
 
             elif self.list_combobox[i].currentText() == "Stock":
                 my_list = []
-                for y in self.table:
-                    my_list.append(int(y[i]))
+                for y in range(len(self.table)):
+                    try:
+                        my_list.append(int(self.table[y][i]))
+                    except ValueError:
+                        self.table = table_save.copy()
+                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        return
                 final_data["Stock"] = my_list
 
         self.messager.send_table.emit(final_data)
@@ -233,7 +270,7 @@ class Data_dialog(QDialog):
                 self.list_combobox[i].setCurrentText("Skip")
                 return
 
-    def style_boxes(self):  # Skip", "Name", "Reference", "Sells", "Stock
+    def style_boxes(self):
         for i in self.list_combobox:
             self.paint_box(i, i.currentText())
 
@@ -242,6 +279,18 @@ class Data_dialog(QDialog):
             i.setItemData(2, QColor(self.color_dict["Reference"]), Qt.BackgroundRole)
             i.setItemData(3, QColor(self.color_dict["Sells"]), Qt.BackgroundRole)
             i.setItemData(4, QColor(self.color_dict["Stock"]), Qt.BackgroundRole)
+
+    def row_clicked(self):
+        button = self.sender()
+        name = button.objectName()
+        if name[1] == "y":
+            button.setObjectName(name[0] + "n")
+            Utils.style_click_button(button, "#d32f2f")
+            Utils.set_icon(button, "no", 1)
+        else:
+            button.setObjectName(name[0] + "y")
+            Utils.style_click_button(button, "#689f38")
+            Utils.set_icon(button, "yes", 1)
 
     def paint_box(self, combo, text):
         if text == "Ref.":

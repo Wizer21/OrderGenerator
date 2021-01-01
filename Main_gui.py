@@ -172,9 +172,10 @@ class Main_gui(QMainWindow):
                     self.item_list[i].sells_history.append(0)
 
         self.month_count += added_months
-        self.build_table()
-        self.calc_order()
-        self.save_table()
+        if len(self.item_list) != 0:
+            self.build_table()
+            self.calc_order()
+            self.save_table()
 
 
     def build_table(self):
@@ -480,6 +481,7 @@ class Main_gui(QMainWindow):
             item.reference = tables_list[self.current_table][key]["ref"]
             self.item_list.append(item)
 
+        self.month_count = 0
         for key in tables_list[self.current_table]:
             self.month_count = len(tables_list[self.current_table][key]["sells"])
             break

@@ -36,7 +36,9 @@ class Utils:
             "add": self.scale_pixmap(".\\files\\add.png", map_size[0], map_size[1]),
             "logo": self.scale_pixmap(".\\files\\logo.png", map_size[0], map_size[1]),
             "eyeopen": self.scale_pixmap(".\\files\\eyeopen.png", icon_size[0], icon_size[1]),
-            "eyeclose": self.scale_pixmap(".\\files\\eyeclose.png", icon_size[0], icon_size[1])
+            "eyeclose": self.scale_pixmap(".\\files\\eyeclose.png", icon_size[0], icon_size[1]),
+            "yes": self.scale_pixmap(".\\files\\yes.png", icon_size[0], icon_size[1]),
+            "no": self.scale_pixmap(".\\files\\no.png", icon_size[0], icon_size[1])
         }
 
     def scale_pixmap(self, url, w, h):
