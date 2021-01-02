@@ -182,6 +182,7 @@ class Data_dialog(QDialog):
         if len(self.table) == 0:
             self.table = table_save.copy()
             self.label_error.setText("Nothing imported")
+            self.list_rows_button.reverse()
             return
 
         final_data = {
@@ -208,6 +209,7 @@ class Data_dialog(QDialog):
                         my_list.append(int(self.table[y][i]))
                     except ValueError:
                         self.table = table_save.copy()
+                        self.list_rows_button.reverse()
                         self.label_error.setText("Column {0} must be numeric".format(y + 1))
                         return
                 final_data["Sells"].append(my_list)
@@ -225,6 +227,7 @@ class Data_dialog(QDialog):
                         my_list.append(int(self.table[y][i]))
                     except ValueError:
                         self.table = table_save.copy()
+                        self.list_rows_button.reverse()
                         self.label_error.setText("Column {0} must be numeric".format(y + 1))
                         return
                 final_data["Stock"] = my_list
@@ -242,6 +245,7 @@ class Data_dialog(QDialog):
                         my_list.append(float(value))
                     except ValueError:
                         self.table = table_save.copy()
+                        self.list_rows_button.reverse()
                         self.label_error.setText("Column {0} must be numeric".format(y + 1))
                         return
                 final_data["Buyprice"] = my_list
@@ -259,6 +263,7 @@ class Data_dialog(QDialog):
                         my_list.append(float(value))
                     except ValueError:
                         self.table = table_save.copy()
+                        self.list_rows_button.reverse()
                         self.label_error.setText("Column {0} must be numeric".format(y + 1))
                         return
                 final_data["Sellprice"] = my_list
@@ -339,6 +344,10 @@ class Data_dialog(QDialog):
     def paint_box(self, combo, text):
         if text == "Ref.":
             text = "Reference"
+        elif text == "Buy P.":
+            text = "Buyp"
+        elif text == "Sell P.":
+            text = "Sellp"
 
         if text in self.color_dict:
             combo.setStyleSheet("background-color: {0};".format(self.color_dict[text]))
