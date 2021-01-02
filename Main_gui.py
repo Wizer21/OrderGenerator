@@ -44,8 +44,8 @@ class Main_gui(QMainWindow):
         self.label_selected_profile = QLabel(self.current_table, self)
         self.button_import_data = QPushButton("Import\nData", self)
         self.button_generate_mail = QPushButton("Generate\nMail", self)
-        self.label_sustain_wanted = QLabel("Buy for {0} month".format(str(self.sustain_value)), self)
-        self.label_based_month = QLabel("Based on last {0} month".format(str(self.used_month)), self)
+        self.label_sustain_wanted = QLabel("Buy for {0} month(s)".format(str(self.sustain_value)), self)
+        self.label_based_month = QLabel("Based on last {0} month(s)".format(str(self.used_month)), self)
         self.slider_sustain = JumpSlider()
         self.slider_base_month = JumpSlider()
 
@@ -274,16 +274,16 @@ class Main_gui(QMainWindow):
             for y in range(len(self.item_list[i].sells_history)):  # FILL SELLS COLUMN
                 val = self.item_list[i].sells_history[y]
                 if val == 0:
-                    sells = QTableWidgetItem(str(val))
+                    sells = QTableWidgetItem(Utils.float_to_str(val))
                 else:
-                    sells = TableWidgetItem(str(val))
+                    sells = TableWidgetItem(Utils.float_to_str(val))
 
                 sells.setBackgroundColor(QColor(self.color_dict["Sells"]))
                 sells.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
                 self.table_widget_main.setItem(i, column, sells)
                 column += 1
 
-            stock = TableWidgetItem(str(self.item_list[i].stock))  # FILL STOCK COLUMN
+            stock = TableWidgetItem(Utils.float_to_str(self.item_list[i].stock))  # FILL STOCK COLUMN
 
             stock.setBackgroundColor(QColor(self.color_dict["Stock"]))
             stock.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
@@ -291,7 +291,7 @@ class Main_gui(QMainWindow):
             column += 1
 
             if self.show_buyp:
-                buy = QTableWidgetItem(str(self.item_list[i].buy_price))
+                buy = QTableWidgetItem(Utils.float_to_str(self.item_list[i].buy_price))
                 buy.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
                 buy.setBackgroundColor(QColor(self.color_dict["Buyp"]))
 
@@ -299,7 +299,7 @@ class Main_gui(QMainWindow):
                 column += 1
 
             if self.show_sellp:
-                sell = QTableWidgetItem(str(self.item_list[i].sell_price))
+                sell = QTableWidgetItem(Utils.float_to_str(self.item_list[i].sell_price))
                 sell.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
                 sell.setBackgroundColor(QColor(self.color_dict["Sellp"]))
 
@@ -350,9 +350,9 @@ class Main_gui(QMainWindow):
                 average = int(average)
 
             if average == 0:
-                value = QTableWidgetItem(str(average))
+                value = QTableWidgetItem(Utils.float_to_str(average))
             else:
-                value = TableWidgetItem(str(average))
+                value = TableWidgetItem(Utils.float_to_str(average))
 
             value.setBackgroundColor(QColor(self.color_dict["Average"]))
             value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
@@ -366,9 +366,9 @@ class Main_gui(QMainWindow):
                 to_buy = int(to_buy)
 
             if to_buy == 0:
-                value = QTableWidgetItem(str(to_buy))
+                value = QTableWidgetItem(Utils.float_to_str(to_buy))
             else:
-                value = TableWidgetItem(str(to_buy))
+                value = TableWidgetItem(Utils.float_to_str(to_buy))
 
             self.item_list[i].to_buy = to_buy
             value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
@@ -382,13 +382,13 @@ class Main_gui(QMainWindow):
     def apply_new_sustain_value(self, int_value):
         val = int_value / 4
         self.sustain_value = val
-        self.label_sustain_wanted.setText("Buy for {0} month".format(str(self.sustain_value)))
+        self.label_sustain_wanted.setText("Buy for {0} month(s)".format(str(self.sustain_value)))
         self.reset_table()
 
     @Slot(str)
     def apply_new_base_value(self, value):
         self.used_month = int(value)
-        self.label_based_month.setText("Based on last {0} month".format(str(self.used_month)))
+        self.label_based_month.setText("Based on last {0} month(s)".format(str(self.used_month)))
         self.reset_table()
 
     @Slot()
@@ -546,8 +546,8 @@ class Main_gui(QMainWindow):
                 json.dump(tables, data_json)
 
     def update_displayed_settings(self):
-        self.label_sustain_wanted.setText("Buy for {0} month".format(str(self.sustain_value)))
-        self.label_based_month.setText("Based on last {0} month".format(str(self.used_month)))
+        self.label_sustain_wanted.setText("Buy for {0} month(s)".format(str(self.sustain_value)))
+        self.label_based_month.setText("Based on last {0} month(s)".format(str(self.used_month)))
         self.slider_sustain.setValue(self.sustain_value * 4)
         self.slider_base_month.setValue(self.used_month)
 

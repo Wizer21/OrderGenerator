@@ -125,6 +125,16 @@ class Settings(QDialog):
         self.combo_color_average.setCursor(Qt.PointingHandCursor)
         self.combo_color_to_buy.setCursor(Qt.PointingHandCursor)
 
+        self.combobox_profiles.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_reference.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_text.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_sells.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_stock.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_buyp.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_sellp.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_average.setItemDelegate(QStyledItemDelegate())
+        self.combo_color_to_buy.setItemDelegate(QStyledItemDelegate())
+
         for i in range(len(self.color_list)):
             self.combo_color_reference.addItem("Reference")
             self.combo_color_text.addItem("Name")

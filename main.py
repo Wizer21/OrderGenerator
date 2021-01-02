@@ -18,9 +18,12 @@ if __name__ == "__main__":
     font_size = int(resolution[0] / 110)
     font_qss = "QWidget{ font-size:" + str(font_size) + "px;}"
 
+    combo_size = str(int(resolution[1]/54))
+    combo_style = "QComboBox:drop-down{ height: " + combo_size + "px; width: " + combo_size + "px;}"
+
     with open(".\\files\\theme.qss") as my_file:
         theme = my_file.read()
-        app.setStyleSheet(font_qss + theme)
+        app.setStyleSheet(font_qss + combo_style + theme)
 
     utils = Utils(font_size, resolution)
 

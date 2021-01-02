@@ -122,6 +122,8 @@ class Mail_build(QDialog):
         self.button_delete.setCursor(Qt.PointingHandCursor)
         self.button_validate.setCursor(Qt.PointingHandCursor)
 
+        self.combo_profiles_mail.setItemDelegate(QStyledItemDelegate())
+
         for key in self.mail_pattern_list:
             self.combo_profiles_mail.addItem(key)
         self.combo_profiles_mail.setCurrentText(self.mail_profile)

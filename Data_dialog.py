@@ -21,6 +21,7 @@ class Data_dialog(QDialog):
 
         self.layout_main = QGridLayout(self)
 
+        self.widget_top = QWidget(self)
         self.layout_header = QGridLayout(self)
         self.label_new_item = QLabel("New Items:", self)
         self.button_add_clear = QPushButton("Add", self)
@@ -41,11 +42,12 @@ class Data_dialog(QDialog):
         # STRUCTURE
         self.setLayout(self.layout_main)
 
-        self.layout_main.addLayout(self.layout_header, 0, 0)
-        self.layout_main.addWidget(self.label_new_item, 0, 0)
-        self.layout_main.addWidget(self.button_add_clear, 1, 0)
-        self.layout_main.addWidget(self.label_error, 0, 1)
-        self.layout_main.addWidget(self.button_push, 1, 1)
+        self.layout_main.addWidget(self.widget_top, 0, 0, 1, 2)
+        self.widget_top.setLayout(self.layout_header)
+        self.layout_header.addWidget(self.label_new_item, 0, 0)
+        self.layout_header.addWidget(self.button_add_clear, 1, 0)
+        self.layout_header.addWidget(self.label_error, 0, 1)
+        self.layout_header.addWidget(self.button_push, 1, 1)
 
         self.layout_main.addWidget(self.group_clipboard, 2, 0, 1, 2)
         self.group_clipboard.setLayout(self.layout_clipboard)
@@ -60,12 +62,15 @@ class Data_dialog(QDialog):
         self.layout_main.setAlignment(Qt.AlignTop)
         self.layout_main.setRowStretch(0, 0)
         self.layout_main.setRowStretch(1, 0)
+        self.widget_top.setVisible(False)
 
         self.button_paste.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.table_import_view.setVisible(False)
         self.button_add_clear.setCursor(Qt.PointingHandCursor)
         self.button_push.setCursor(Qt.PointingHandCursor)
         self.button_paste.setCursor(Qt.PointingHandCursor)
+
+        self.table_import_view.verticalHeader().setVisible(False)
 
         Utils.set_icon(self.button_add_clear, "add_items", 1.5)
         Utils.set_icon(self.button_push, "pushtable", 1.5)
@@ -96,6 +101,8 @@ class Data_dialog(QDialog):
             self.layout_main.addWidget(self.table_import_view, 2, 0, 1, 2)
             self.table_import_view.setVisible(True)
 
+            self.widget_top.setVisible(True)
+
         text = mime_data.text()
         current_item = ""
         rows = 0
@@ -120,6 +127,12 @@ class Data_dialog(QDialog):
         self.table_import_view.setColumnCount(len(self.table[0]) + 1)  # SET ROW/COLUMN COUNT
         self.table_import_view.setRowCount(len(self.table) + 1)
 
+        count_columns = self.table_import_view.columnCount()
+        headers = [""]
+        for i in range(1, count_columns):
+            headers.append(str(i))
+        self.table_import_view.setHorizontalHeaderLabels(headers)
+
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
             combo = QComboBox(self)
             combo.addItems(["Skip", "Ref.", "Name", "Sells", "Stock", "Buy P.", "Sell P."])
@@ -129,6 +142,7 @@ class Data_dialog(QDialog):
             combo.setObjectName(str(i))
             combo.setCurrentIndex(3)
 
+            combo.setItemDelegate(QStyledItemDelegate())
             combo.textActivated.connect(self.combo_top_changed)
             self.list_combobox.append(combo)
 
@@ -205,12 +219,13 @@ class Data_dialog(QDialog):
             elif self.list_combobox[i].currentText() == "Sells":
                 my_list = []
                 for y in range(len(self.table)):
+                    value = Utils.clear_separators(self.table[y][i])
                     try:
-                        my_list.append(int(self.table[y][i]))
+                        my_list.append(float(value))
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Sells"].append(my_list)
 
@@ -223,48 +238,39 @@ class Data_dialog(QDialog):
             elif self.list_combobox[i].currentText() == "Stock":
                 my_list = []
                 for y in range(len(self.table)):
+                    value = Utils.clear_separators(self.table[y][i])
                     try:
-                        my_list.append(int(self.table[y][i]))
+                        my_list.append(float(value))
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Stock"] = my_list
 
             elif self.list_combobox[i].currentText() == "Buy P.":
                 my_list = []
                 for y in range(len(self.table)):
-                    value = self.table[y][i]
-                    value = value.replace("€", "")
-                    value = value.replace("$", "")
-                    value = value.replace("£", "")
-                    value = value.replace(",", ".")
-                    value = value.replace(Utils.get_win_separator(), ".")
+                    value = Utils.clear_separators(self.table[y][i])
                     try:
                         my_list.append(float(value))
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Buyprice"] = my_list
 
             elif self.list_combobox[i].currentText() == "Sell P.":
                 my_list = []
                 for y in range(len(self.table)):
-                    value = self.table[y][i]
-                    value = value.replace("€", "")
-                    value = value.replace("$", "")
-                    value = value.replace("£", "")
-                    value = value.replace(",", ".")
-                    value = value.replace(Utils.get_win_separator(), ".")
+                    value = Utils.clear_separators(self.table[y][i])
                     try:
                         my_list.append(float(value))
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Sellprice"] = my_list
 
@@ -303,18 +309,23 @@ class Data_dialog(QDialog):
                 continue
             if self.list_combobox[i].currentText() == "Name" and combo_text == "Name":
                 self.list_combobox[i].setCurrentText("Skip")
+                self.paint_box(self.list_combobox[i], "Skip")
                 return
-            if self.list_combobox[i].currentText() == "Reference" and combo_text == "Reference":
+            if self.list_combobox[i].currentText() == "Ref." and combo_text == "Ref.":
                 self.list_combobox[i].setCurrentText("Skip")
+                self.paint_box(self.list_combobox[i], "Skip")
                 return
             if self.list_combobox[i].currentText() == "Stock" and combo_text == "Stock":
                 self.list_combobox[i].setCurrentText("Skip")
+                self.paint_box(self.list_combobox[i], "Skip")
                 return
             if self.list_combobox[i].currentText() == "Buy P." and combo_text == "Buy P.":
                 self.list_combobox[i].setCurrentText("Skip")
+                self.paint_box(self.list_combobox[i], "Skip")
                 return
             if self.list_combobox[i].currentText() == "Sell P." and combo_text == "Sell P.":
                 self.list_combobox[i].setCurrentText("Skip")
+                self.paint_box(self.list_combobox[i], "Skip")
                 return
 
     def style_boxes(self):
@@ -348,6 +359,9 @@ class Data_dialog(QDialog):
             text = "Buyp"
         elif text == "Sell P.":
             text = "Sellp"
+        elif text == "Skip":
+            combo.setStyleSheet("background-color: #000000;")
+            return
 
         if text in self.color_dict:
             combo.setStyleSheet("background-color: {0};".format(self.color_dict[text]))
