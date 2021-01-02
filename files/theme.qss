@@ -1,7 +1,6 @@
 QWidget {
   background-color: #161616;
   color: #ffffff;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 QWidget::focus {

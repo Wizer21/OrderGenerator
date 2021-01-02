@@ -20,7 +20,7 @@ class Utils:
 
         width_from_rez = int(new_resolution[1] / 40)
         map_size = [width_from_rez, width_from_rez]
-        icon_size = [int(map_size[0] * 2), int(map_size[1] * 2)]
+        icon_size = [int(map_size[0] * 3), int(map_size[1] * 3)]
         resolution = new_resolution
 
         locale.setlocale(locale.LC_ALL, '')
@@ -70,6 +70,10 @@ class Utils:
         widget.setStyleSheet("font-size: {0}px;".format(int(pixelsize * value)))
 
     @staticmethod
+    def resize_and_color_font(widget, value, color):
+        widget.setStyleSheet("font-size: {0}px; color: {1}; font: bold;".format(int(pixelsize * value), color))
+
+    @staticmethod
     def style_click_button(widget, color):
         style = """QPushButton {
                 background-color: <color>;
@@ -106,3 +110,7 @@ class Utils:
         value = round(value, 2)
         value = str(f"{value:_}")
         return value.replace("_", " ")
+
+    @staticmethod
+    def slider_lenght_from_res(slider, ratio):
+        slider.setFixedWidth(int(resolution[1] * ratio))

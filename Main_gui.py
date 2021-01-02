@@ -8,6 +8,7 @@ from Settings import *
 from Mail_build import *
 import json
 from Utils import *
+from JumpSlider import *
 
 class Main_gui(QMainWindow):
     def __init__(self):
@@ -43,12 +44,10 @@ class Main_gui(QMainWindow):
         self.label_selected_profile = QLabel(self.current_table, self)
         self.button_import_data = QPushButton("Import\nData", self)
         self.button_generate_mail = QPushButton("Generate\nMail", self)
-        self.label_sustain_wanted = QLabel("Buy for ", self)
-        self.label_based_month = QLabel("Based on last ", self)
-        self.line_edit_sustain = QLineEdit(str(self.sustain_value), self)
-        self.line_edit_base_month = QLineEdit(str(self.used_month), self)
-        self.label_sustain_step = QLabel("month", self)
-        self.label_based_step = QLabel("month", self)
+        self.label_sustain_wanted = QLabel("Buy for {0} month".format(str(self.sustain_value)), self)
+        self.label_based_month = QLabel("Based on last {0} month".format(str(self.used_month)), self)
+        self.slider_sustain = JumpSlider()
+        self.slider_base_month = JumpSlider()
 
         self.widget_foot = QWidget(self)
         self.layout_foot = QGridLayout(self)
@@ -71,6 +70,7 @@ class Main_gui(QMainWindow):
             self.refresh_prices_values()
 
         Utils.resize_from_resolution(self, 0.6, 0.6)
+        self.set_foot_color()
 
     def build(self):
         # STRUCTURE
@@ -81,26 +81,24 @@ class Main_gui(QMainWindow):
         self.widget_main.setLayout(self.layout_main)
 
         self.layout_main.addLayout(self.layout_top_panel, 0, 0)
-        self.layout_top_panel.addWidget(self.label_selected_profile, 0, 0, 2, 1, Qt.AlignLeft)
-        self.layout_top_panel.addWidget(self.button_import_data, 0, 1, 2, 1, Qt.AlignRight)
-        self.layout_top_panel.addWidget(self.button_generate_mail, 0, 2, 2, 1, Qt.AlignRight)
-        self.layout_top_panel.addWidget(self.label_sustain_wanted, 0, 3, 1, 1, Qt.AlignRight)
-        self.layout_top_panel.addWidget(self.line_edit_sustain, 0, 4, 1, 1, Qt.AlignRight)
-        self.layout_top_panel.addWidget(self.label_sustain_step, 0, 5, 1, 1, Qt.AlignRight)
-        self.layout_top_panel.addWidget(self.label_based_month, 1, 3, 1, 1, Qt.AlignRight)
-        self.layout_top_panel.addWidget(self.line_edit_base_month, 1, 4, 1, 1, Qt.AlignRight)
-        self.layout_top_panel.addWidget(self.label_based_step, 1, 5, 1, 1, Qt.AlignRight)
+        self.layout_top_panel.addWidget(self.label_selected_profile, 0, 0, 4, 1, Qt.AlignLeft)
+        self.layout_top_panel.addWidget(self.button_import_data, 0, 1, 4, 1, Qt.AlignRight)
+        self.layout_top_panel.addWidget(self.button_generate_mail, 0, 2, 4, 1, Qt.AlignRight)
+        self.layout_top_panel.addWidget(self.label_sustain_wanted, 0, 3, Qt.AlignRight)
+        self.layout_top_panel.addWidget(self.slider_sustain, 1, 3)
+        self.layout_top_panel.addWidget(self.label_based_month, 2, 3, Qt.AlignRight)
+        self.layout_top_panel.addWidget(self.slider_base_month, 3, 3)
 
         self.layout_main.addWidget(self.table_widget_main, 1, 0)
 
         self.layout_main.addWidget(self.widget_foot, 2, 0)
         self.widget_foot.setLayout(self.layout_foot)
-        self.layout_foot.addWidget(self.label_total_buyp, 0, 0, Qt.AlignRight)
-        self.layout_foot.addWidget(self.label_display_buyp, 0, 1, Qt.AlignLeft)
-        self.layout_foot.addWidget(self.label_total_sellP, 0, 2, Qt.AlignRight)
-        self.layout_foot.addWidget(self.label_display_sellP, 0, 3, Qt.AlignLeft)
-        self.layout_foot.addWidget(self.label_margin, 0, 4, Qt.AlignRight)
-        self.layout_foot.addWidget(self.label_display_margin, 0, 5, Qt.AlignLeft)
+        self.layout_foot.addWidget(self.label_display_buyp, 0, 2, Qt.AlignRight | Qt.AlignBottom)
+        self.layout_foot.addWidget(self.label_total_buyp, 0, 3, Qt.AlignLeft | Qt.AlignBottom)
+        self.layout_foot.addWidget(self.label_display_sellP, 0, 4, Qt.AlignRight | Qt.AlignBottom)
+        self.layout_foot.addWidget(self.label_total_sellP, 0, 5, Qt.AlignLeft | Qt.AlignBottom)
+        self.layout_foot.addWidget(self.label_display_margin, 0, 6, Qt.AlignRight | Qt.AlignBottom)
+        self.layout_foot.addWidget(self.label_margin, 0, 7, Qt.AlignLeft | Qt.AlignBottom)
 
         # WIDGETS PARAMETERS
         self.setWindowTitle("Table")
@@ -108,16 +106,13 @@ class Main_gui(QMainWindow):
         self.layout_top_panel.setColumnStretch(0, 1)
         self.widget_main.setContentsMargins(10, 10, 10, 10)
 
-        Utils.resize_font(self.label_selected_profile, 2.5)
-        Utils.set_icon(self.button_generate_mail, "mail", 2)
-        Utils.set_icon(self.button_import_data, "import_data", 2)
+        Utils.resize_font(self.label_selected_profile, 3.5)
+        Utils.set_icon(self.button_generate_mail, "mail", 3)
+        Utils.set_icon(self.button_import_data, "import_data", 3)
         Utils.style_click_button(self.button_import_data, "#ffa000")
         Utils.style_click_button(self.button_generate_mail, "#1976d2")
-        Utils.main_menu_button_size(self.button_import_data, 0.08)
-        Utils.main_menu_button_size(self.button_generate_mail, 0.08)
-        Utils.resize_font(self.label_display_buyp, 2)
-        Utils.resize_font(self.label_display_sellP, 2)
-        Utils.resize_font(self.label_display_margin, 2)
+        Utils.main_menu_button_size(self.button_import_data, 0.1)
+        Utils.main_menu_button_size(self.button_generate_mail, 0.1)
 
         self.headers.setCursor(Qt.PointingHandCursor)
         self.button_import_data.setCursor(Qt.PointingHandCursor)
@@ -129,15 +124,29 @@ class Main_gui(QMainWindow):
         self.button_import_data.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_generate_mail.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        reg_exp = QRegExpValidator("[+-]?([0-9]*[.])?[0-9]+")
-        self.line_edit_sustain.setValidator(reg_exp)
-        int_only = QIntValidator()
-        self.line_edit_base_month.setValidator(int_only)
+        self.slider_sustain.setOrientation(Qt.Horizontal)
+        self.slider_base_month.setOrientation(Qt.Horizontal)
+        self.slider_sustain.setPageStep(1)
+        self.slider_base_month.setPageStep(1)
+        self.slider_sustain.setCursor(Qt.PointingHandCursor)
+        self.slider_base_month.setCursor(Qt.PointingHandCursor)
+        self.slider_sustain.setRange(1, 96)
+        self.slider_base_month.setRange(1, 24)
+        Utils.slider_lenght_from_res(self.slider_sustain, 0.2)
+        Utils.slider_lenght_from_res(self.slider_base_month, 0.2)
+
+        self.label_total_buyp.setStyleSheet("padding-bottom: 4px;")
+        self.label_total_sellP.setStyleSheet("padding-bottom: 4px;")
+        self.label_margin.setStyleSheet("padding-bottom: 4px;")
+        self.layout_foot.setColumnStretch(0, 1)
+        self.layout_foot.setColumnStretch(2, 1)
+        self.layout_foot.setColumnStretch(4, 1)
+        self.layout_foot.setColumnStretch(6, 1)
 
         self.action_options.triggered.connect(self.open_options)
         self.button_import_data.clicked.connect(self.import_data_clicked)
-        self.line_edit_sustain.textEdited.connect(self.apply_new_sustain_value)
-        self.line_edit_base_month.textEdited.connect(self.apply_new_base_value)
+        self.slider_sustain.valueChanged.connect(self.apply_new_sustain_value)
+        self.slider_base_month.valueChanged.connect(self.apply_new_base_value)
         self.button_generate_mail.clicked.connect(self.mail_generation_clicked)
 
     @Slot()
@@ -369,22 +378,17 @@ class Main_gui(QMainWindow):
 
             self.table_widget_main.columnMoved(1, 0, column_count - 2)
 
-    @Slot(str)
-    def apply_new_sustain_value(self, str_value):
-        if str_value == "":
-            self.sustain_value = 0
-        else:
-            self.sustain_value = float(str_value)
-
+    @Slot(int)
+    def apply_new_sustain_value(self, int_value):
+        val = int_value / 4
+        self.sustain_value = val
+        self.label_sustain_wanted.setText("Buy for {0} month".format(str(self.sustain_value)))
         self.reset_table()
 
     @Slot(str)
     def apply_new_base_value(self, value):
-        if value == "" or value == "0":
-            self.used_month = 1
-        else:
-            self.used_month = int(value)
-
+        self.used_month = int(value)
+        self.label_based_month.setText("Based on last {0} month".format(str(self.used_month)))
         self.reset_table()
 
     @Slot()
@@ -542,14 +546,16 @@ class Main_gui(QMainWindow):
                 json.dump(tables, data_json)
 
     def update_displayed_settings(self):
-        self.label_selected_profile.setText(self.current_table)
-        self.line_edit_sustain.setText(str(self.sustain_value))
-        self.line_edit_base_month.setText(str(self.used_month))
+        self.label_sustain_wanted.setText("Buy for {0} month".format(str(self.sustain_value)))
+        self.label_based_month.setText("Based on last {0} month".format(str(self.used_month)))
+        self.slider_sustain.setValue(self.sustain_value * 4)
+        self.slider_base_month.setValue(self.used_month)
 
     @Slot(dict)
     def update_color_table(self, new_color_dict):
         self.color_dict = new_color_dict
         self.reset_table()
+        self.set_foot_color()
 
     @Slot()
     def mail_generation_clicked(self):
@@ -605,6 +611,11 @@ class Main_gui(QMainWindow):
             self.label_display_margin.setText(Utils.format_large_numbers(total_sellp - total_buyp))
         else:
             self.widget_foot.setVisible(False)
+
+    def set_foot_color(self):
+        Utils.resize_and_color_font(self.label_display_buyp, 2, self.color_dict["Buyp"])
+        Utils.resize_and_color_font(self.label_display_sellP, 2, self.color_dict["Sellp"])
+        Utils.resize_and_color_font(self.label_display_margin, 2, self.color_dict["ToBuy"])
 
     def closeEvent(self, event):
         self.save_settings()
