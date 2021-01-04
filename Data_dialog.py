@@ -3,6 +3,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from Utils import *
 import locale
+from Combo_no_wheel import *
+from Table_widget_zoom import *
 
 class Connection(QObject):
     send_table = Signal(dict)
@@ -18,6 +20,7 @@ class Data_dialog(QDialog):
         self.table = [[]]
         self.update_clip = True
         self.color_dict = new_color_dict
+        self.event_no_wheel = QObject()
 
         self.layout_main = QGridLayout(self)
 
@@ -33,7 +36,7 @@ class Data_dialog(QDialog):
         self.rich_clipboard = QTextEdit(self)
         self.button_paste = QPushButton("Paste table from clipboard")
 
-        self.table_import_view = QTableWidget(self)
+        self.table_import_view = Table_widget_zoom(self, False)
 
         self.build()
         Utils.resize_from_resolution(self, 0.6, 0.6)
@@ -41,6 +44,7 @@ class Data_dialog(QDialog):
     def build(self):
         # STRUCTURE
         self.setLayout(self.layout_main)
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint)
 
         self.layout_main.addWidget(self.widget_top, 0, 0, 1, 2)
         self.widget_top.setLayout(self.layout_header)
@@ -51,8 +55,8 @@ class Data_dialog(QDialog):
 
         self.layout_main.addWidget(self.group_clipboard, 2, 0, 1, 2)
         self.group_clipboard.setLayout(self.layout_clipboard)
-        self.layout_clipboard.addWidget(self.rich_clipboard, 0, 0)
-        self.layout_clipboard.addWidget(self.button_paste, 0, 1)
+        self.layout_clipboard.addWidget(self.rich_clipboard, 0, 0, 3, 1)
+        self.layout_clipboard.addWidget(self.button_paste, 3, 0, 1, 1)
 
         # WIDGETS PARAMETERS
         self.setWindowTitle("Import Table")
@@ -64,13 +68,16 @@ class Data_dialog(QDialog):
         self.layout_main.setRowStretch(1, 0)
         self.widget_top.setVisible(False)
 
+        self.layout_clipboard.setRowStretch(0, 1)
+        self.layout_clipboard.setRowStretch(1, 1)
+        self.layout_clipboard.setRowStretch(2, 1)
+        self.layout_clipboard.setRowStretch(3, 1)
+
         self.button_paste.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.table_import_view.setVisible(False)
         self.button_add_clear.setCursor(Qt.PointingHandCursor)
         self.button_push.setCursor(Qt.PointingHandCursor)
         self.button_paste.setCursor(Qt.PointingHandCursor)
-
-        self.table_import_view.verticalHeader().setVisible(False)
 
         Utils.set_icon(self.button_add_clear, "add_items", 1.5)
         Utils.set_icon(self.button_push, "pushtable", 1.5)
@@ -134,7 +141,7 @@ class Data_dialog(QDialog):
         self.table_import_view.setHorizontalHeaderLabels(headers)
 
         for i in range(len(self.table[0])):  # SET TOP BUTTONS
-            combo = QComboBox(self)
+            combo = Combo_no_wheel(self)
             combo.addItems(["Skip", "Ref.", "Name", "Sells", "Stock", "Buy P.", "Sell P."])
 
             self.table_import_view.setCellWidget(0, i + 1, combo)
@@ -173,16 +180,17 @@ class Data_dialog(QDialog):
 
     @Slot()
     def push_button_clicked(self):
+        self.label_error.setText("")
         if self.update_clip:
             self.label_error.setText("No table copied")
             return
 
-        name_count = 0  # Check if there is not only one column 'Name'
+        got_name = False  # Check if there is not only one column 'Name'
         for i in range(len(self.list_combobox)):
             if self.list_combobox[i].currentText() == "Name":
-                name_count += 1
+                got_name = True
                 continue
-        if name_count < 1:
+        if not got_name:
             self.label_error.setText("Need at least one column name")
             return
 
@@ -191,8 +199,9 @@ class Data_dialog(QDialog):
         self.list_rows_button.reverse()
         for i in self.list_rows_button:
             obj_name = i.objectName()
-            if obj_name[1] == "n":
-                del self.table[int(obj_name[0])]
+            if obj_name[len(obj_name) - 1] == "n":
+                obj_name = obj_name.replace("n", "")
+                del self.table[int(obj_name)]
         if len(self.table) == 0:
             self.table = table_save.copy()
             self.label_error.setText("Nothing imported")
@@ -210,7 +219,9 @@ class Data_dialog(QDialog):
         }
 
         for i in range(len(self.list_combobox)):
-            if self.list_combobox[i].currentText() == "Name":
+            if self.list_combobox[i].currentText() == "Skip":
+                continue
+            elif self.list_combobox[i].currentText() == "Name":
                 my_list = []
                 for y in self.table:
                     my_list.append(y[i])
@@ -225,7 +236,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
                         return
                 final_data["Sells"].append(my_list)
 
@@ -244,7 +255,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
                         return
                 final_data["Stock"] = my_list
 
@@ -257,7 +268,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
                         return
                 final_data["Buyprice"] = my_list
 
@@ -270,7 +281,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
                         return
                 final_data["Sellprice"] = my_list
 
@@ -343,12 +354,14 @@ class Data_dialog(QDialog):
     def row_clicked(self):
         button = self.sender()
         name = button.objectName()
-        if name[1] == "y":
-            button.setObjectName(name[0] + "n")
+        if name[len(name) - 1] == "y":
+            name = name.replace("y", "n")
+            button.setObjectName(name)
             Utils.style_click_button(button, "#d32f2f")
             Utils.set_icon(button, "no", 1)
         else:
-            button.setObjectName(name[0] + "y")
+            name = name.replace("n", "y")
+            button.setObjectName(name)
             Utils.style_click_button(button, "#689f38")
             Utils.set_icon(button, "yes", 1)
 

@@ -9,6 +9,7 @@ from Mail_build import *
 import json
 from Utils import *
 from JumpSlider import *
+from Table_widget_zoom import *
 
 class Main_gui(QMainWindow):
     def __init__(self):
@@ -58,7 +59,7 @@ class Main_gui(QMainWindow):
         self.label_margin = QLabel("Margin", self)
         self.label_display_margin = QLabel("0", self)
 
-        self.table_widget_main = QTableWidget(self)
+        self.table_widget_main = Table_widget_zoom(self, True)
         self.headers = self.table_widget_main.horizontalHeader()
 
         self.build()
@@ -320,7 +321,6 @@ class Main_gui(QMainWindow):
         headers.append("Average\nSells")
         headers.append("To Buy")
         self.table_widget_main.setHorizontalHeaderLabels(headers)
-        self.table_widget_main.resizeColumnsToContents()
 
     def calc_order(self):
         calc_month = self.used_month
@@ -374,7 +374,6 @@ class Main_gui(QMainWindow):
             value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
             value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
             self.table_widget_main.setItem(i, column_count - 1, value)
-            self.table_widget_main.resizeColumnsToContents()
 
             self.table_widget_main.columnMoved(1, 0, column_count - 2)
 

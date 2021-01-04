@@ -154,10 +154,10 @@ QHeaderView::section:vertical {
 }
 QHeaderView::section:horizontal {
   background: transparent;
-  font-size: 20px;
   padding: 0px;
   margin: 0px;
   min-width: 100px;
+  font-size: 20px;
 }
 QHeaderView::section:pressed {
   border: 2px solid white;

@@ -26,7 +26,7 @@ class NewNameDialog(QDialog):
             self.label.setText("Preset name")
             self.setWindowTitle("New mail preset")
 
-        Utils.resize_from_resolution(self, 0.2, 0.2)
+        Utils.resize_from_resolution(self, 0.15, 0)
 
     def build(self):
 

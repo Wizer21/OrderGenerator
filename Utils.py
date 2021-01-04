@@ -117,6 +117,8 @@ class Utils:
 
     @staticmethod
     def clear_separators(value_str):
+        if value_str == "":
+            return "0"
         value_str = value_str.replace("€", "")
         value_str = value_str.replace("$", "")
         value_str = value_str.replace("£", "")
@@ -128,3 +130,8 @@ class Utils:
     def float_to_str(float):
         text = str(float)
         return text.replace(".0", "")
+
+    @staticmethod
+    def get_main_pixel_size():
+        return pixelsize
+
