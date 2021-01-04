@@ -34,6 +34,10 @@ class Main_gui(QMainWindow):
         self.show_ref = True
         self.show_buyp = True
         self.show_sellp = True
+        self.show_sell = False
+        self.column_count = 0
+        self.default_sorting = {}
+        self.user_sorting = {}
 
         self.menubar_main = QMenuBar(self)
         self.action_options = QAction("Settings")
@@ -67,7 +71,6 @@ class Main_gui(QMainWindow):
         self.load_tables()
         if len(self.item_list) != 0:
             self.build_table()
-            self.calc_order()
             self.refresh_prices_values()
 
         Utils.resize_from_resolution(self, 0.6, 0.6)
@@ -209,7 +212,7 @@ class Main_gui(QMainWindow):
                     new_item = True
                     continue
 
-            if push_if_new_item and not new_item:  # IF NEW ITEMS IS NEW
+            if push_if_new_item and not new_item and names[i] != "":  # IF NEW ITEMS IS NEW
                 self.item_list.insert(0, Item(names[i], self.month_count))
                 for z in lists:  # For every list
                     self.item_list[0].sells_history.append(z[i])  # Push the val at i
@@ -253,60 +256,80 @@ class Main_gui(QMainWindow):
         if self.show_sellp:
             count += 1
 
-        self.table_widget_main.setColumnCount(sells_count + count + 4)  # +4 for column name/stock/average/ordervalue
+        self.column_count = sells_count + count + 4
+        self.table_widget_main.setColumnCount(self.column_count)  # +4 for column name/stock/average/ordervalue
 
         for i in range(len(self.item_list)):  # EVERY ROW
             column = 0
             if self.show_ref:
-                ref = QTableWidgetItem(self.item_list[i].reference)
-                ref.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-                ref.setBackgroundColor(QColor(self.color_dict["Reference"]))
-
-                self.table_widget_main.setItem(i, column, ref)
+                self.build_ref(i, column)
                 column += 1
-
-            name = QTableWidgetItem(self.item_list[i].name)
-            name.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-            name.setBackgroundColor(QColor(self.color_dict["Name"]))
-
-            self.table_widget_main.setItem(i, column, name)  # FILL NAME COLUMN
+            self.build_name(i, column)
             column += 1
-
-            for y in range(len(self.item_list[i].sells_history)):  # FILL SELLS COLUMN
-                val = self.item_list[i].sells_history[y]
-                if val == 0:
-                    sells = QTableWidgetItem(Utils.float_to_str(val))
-                else:
-                    sells = TableWidgetItem(Utils.float_to_str(val))
-
-                sells.setBackgroundColor(QColor(self.color_dict["Sells"]))
-                sells.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-                self.table_widget_main.setItem(i, column, sells)
-                column += 1
-
-            stock = TableWidgetItem(Utils.float_to_str(self.item_list[i].stock))  # FILL STOCK COLUMN
-
-            stock.setBackgroundColor(QColor(self.color_dict["Stock"]))
-            stock.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-            self.table_widget_main.setItem(i, column, stock)
+            self.build_sells(i, column)
+            column += len(self.item_list[0].sells_history)
+            self.build_stock(i, column)
             column += 1
-
             if self.show_buyp:
-                buy = QTableWidgetItem(Utils.float_to_str(self.item_list[i].buy_price))
-                buy.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-                buy.setBackgroundColor(QColor(self.color_dict["Buyp"]))
-
-                self.table_widget_main.setItem(i, column, buy)
+                self.build_buy_price(i, column)
                 column += 1
-
             if self.show_sellp:
-                sell = QTableWidgetItem(Utils.float_to_str(self.item_list[i].sell_price))
-                sell.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-                sell.setBackgroundColor(QColor(self.color_dict["Sellp"]))
-
-                self.table_widget_main.setItem(i, column, sell)
+                self.build_sell_price(i, column)
                 column += 1
+            self.build_headers(sells_count)
 
+            self.calc_average(i)
+            self.calc_to_buy(i)
+            self.table_widget_main.resizeColumnsToContents()
+            self.table_widget_main.resizeRowsToContents()
+
+    def build_ref(self, i, column):
+        ref = QTableWidgetItem(self.item_list[i].reference)
+        ref.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+        ref.setBackgroundColor(QColor(self.color_dict["Reference"]))
+
+        self.table_widget_main.setItem(i, column, ref)
+
+    def build_name(self, i, column):
+        name = QTableWidgetItem(self.item_list[i].name)
+        name.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+        name.setBackgroundColor(QColor(self.color_dict["Name"]))
+
+        self.table_widget_main.setItem(i, column, name)  # FILL NAME
+
+    def build_sells(self, i, column):
+        for y in range(len(self.item_list[i].sells_history)):  # FILL SELLS COLUMN
+            val = self.item_list[i].sells_history[y]
+            if val == 0:
+                sells = QTableWidgetItem(Utils.float_to_str(val))
+            else:
+                sells = TableWidgetItem(Utils.float_to_str(val))
+
+            sells.setBackgroundColor(QColor(self.color_dict["Sells"]))
+            sells.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+            self.table_widget_main.setItem(i, column + y, sells)
+
+    def build_stock(self, i, column):
+        stock = TableWidgetItem(Utils.float_to_str(self.item_list[i].stock))  # FILL STOCK COLUMN
+        stock.setBackgroundColor(QColor(self.color_dict["Stock"]))
+        stock.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+        self.table_widget_main.setItem(i, column, stock)
+
+    def build_buy_price(self, i, column):
+        buy = QTableWidgetItem(Utils.float_to_str(self.item_list[i].buy_price))
+        buy.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+        buy.setBackgroundColor(QColor(self.color_dict["Buyp"]))
+
+        self.table_widget_main.setItem(i, column, buy)
+
+    def build_sell_price(self, i, column):
+        sell = QTableWidgetItem(Utils.float_to_str(self.item_list[i].sell_price))
+        sell.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+        sell.setBackgroundColor(QColor(self.color_dict["Sellp"]))
+
+        self.table_widget_main.setItem(i, column, sell)
+
+    def build_headers(self, sells_count):
         headers = []
         if self.show_ref:
             headers.append("Reference")
@@ -322,73 +345,73 @@ class Main_gui(QMainWindow):
         headers.append("To Buy")
         self.table_widget_main.setHorizontalHeaderLabels(headers)
 
-    def calc_order(self):
+    def calc_average(self, i):
         calc_month = self.used_month
-
-        column_count = self.table_widget_main.columnCount()
 
         if self.month_count < calc_month:
             calc_month = self.month_count
 
-        for i in range(len(self.item_list)):
-            my_list = self.item_list[i].sells_history.copy()
-            my_list.reverse()
-            average = 0
+        my_list = self.item_list[i].sells_history.copy()
+        my_list.reverse()
+        average = 0
+        for y in range(0, calc_month):
+            average += my_list[y]
+        average = average / calc_month
 
-            for y in range(0, calc_month):
-                average += my_list[y]
-            average = average / calc_month
+        self.item_list[i].monthly_sells = average
 
-            self.item_list[i].monthly_sells = average
-            to_buy = (average * self.sustain_value) - self.item_list[i].stock
+        if 1 < average:
+            average = round(average)
+        else:
+            average = round(average, 2)
 
-            if 0 < average < 1:
-                average = round(average, 2)
-            elif average < 0:
-                average = 0
-            else:
-                average = int(average)
+        if average == 0:
+            value = QTableWidgetItem(Utils.float_to_str(average))
+        else:
+            value = TableWidgetItem(Utils.float_to_str(average))
 
-            if average == 0:
-                value = QTableWidgetItem(Utils.float_to_str(average))
-            else:
-                value = TableWidgetItem(Utils.float_to_str(average))
+        value.setBackgroundColor(QColor(self.color_dict["Average"]))
+        value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+        self.table_widget_main.setItem(i, self.column_count - 2, value)
 
-            value.setBackgroundColor(QColor(self.color_dict["Average"]))
-            value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-            self.table_widget_main.setItem(i, column_count - 2, value)
+    def calc_to_buy(self, i):
+        to_buy = (self.item_list[i].monthly_sells * self.sustain_value) - self.item_list[i].stock
+        if 0 < to_buy < 1:
+            to_buy = round(to_buy, 2)
+        elif to_buy < 0:
+            to_buy = 0
+        else:
+            to_buy = int(to_buy)
 
-            if 0 < to_buy < 1:
-                to_buy = round(to_buy, 2)
-            elif to_buy < 0:
-                to_buy = 0
-            else:
-                to_buy = int(to_buy)
+        if to_buy == 0:
+            value = QTableWidgetItem(Utils.float_to_str(to_buy))
+        else:
+            value = TableWidgetItem(Utils.float_to_str(to_buy))
 
-            if to_buy == 0:
-                value = QTableWidgetItem(Utils.float_to_str(to_buy))
-            else:
-                value = TableWidgetItem(Utils.float_to_str(to_buy))
-
-            self.item_list[i].to_buy = to_buy
-            value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
-            value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
-            self.table_widget_main.setItem(i, column_count - 1, value)
-
-            self.table_widget_main.columnMoved(1, 0, column_count - 2)
+        self.item_list[i].to_buy = round(to_buy, 1)
+        value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
+        value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
+        self.table_widget_main.setItem(i, self.column_count - 1, value)
 
     @Slot(int)
     def apply_new_sustain_value(self, int_value):
         val = int_value / 4
         self.sustain_value = val
         self.label_sustain_wanted.setText("Buy for {0} month(s)".format(str(self.sustain_value)))
-        self.reset_table()
+        if len(self.item_list) != 0:
+            for i in range(len(self.item_list)):
+                self.calc_to_buy(i)
+            self.refresh_prices_values()
 
     @Slot(str)
     def apply_new_base_value(self, value):
         self.used_month = int(value)
         self.label_based_month.setText("Based on last {0} month(s)".format(str(self.used_month)))
-        self.reset_table()
+        if len(self.item_list) != 0:
+            for i in range(len(self.item_list)):
+                self.calc_average(i)
+                self.calc_to_buy(i)
+            self.refresh_prices_values()
 
     @Slot()
     def open_options(self):
@@ -572,7 +595,6 @@ class Main_gui(QMainWindow):
         self.table_widget_main.setRowCount(0)
         if len(self.item_list) != 0:  # REFRESH TABLE
             self.build_table()
-            self.calc_order()
             self.refresh_prices_values()
 
     @Slot(bool)
@@ -615,6 +637,24 @@ class Main_gui(QMainWindow):
         Utils.resize_and_color_font(self.label_display_buyp, 2, self.color_dict["Buyp"])
         Utils.resize_and_color_font(self.label_display_sellP, 2, self.color_dict["Sellp"])
         Utils.resize_and_color_font(self.label_display_margin, 2, self.color_dict["ToBuy"])
+
+    def save_default_sorting(self):
+        self.default_sorting = {
+            "prev_sort": self.table_widget_main.horizontalHeader().sortIndicatorSection(),
+            "prev_order": self.table_widget_main.horizontalHeader().sortIndicatorOrder()
+        }
+
+    def save_user_sorting(self):
+        self.user_sorting = {
+            "prev_sort": self.table_widget_main.horizontalHeader().sortIndicatorSection(),
+            "prev_order": self.table_widget_main.horizontalHeader().sortIndicatorOrder()
+        }
+
+    def load_default_sorting(self):
+        self.table_widget_main.sortItems(self.default_sorting["prev_sort"], self.default_sorting["prev_order"])
+
+    def load_user_sorting(self):
+        self.table_widget_main.sortItems(self.user_sorting["prev_sort"], self.user_sorting["prev_order"])
 
     def closeEvent(self, event):
         self.save_settings()

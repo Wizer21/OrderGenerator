@@ -236,7 +236,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Sells"].append(my_list)
 
@@ -255,7 +255,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Stock"] = my_list
 
@@ -268,7 +268,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Buyprice"] = my_list
 
@@ -281,7 +281,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} at row {1} must be numeric".format(i + 1, y + 1))
+                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
                         return
                 final_data["Sellprice"] = my_list
 

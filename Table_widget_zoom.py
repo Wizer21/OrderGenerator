@@ -3,6 +3,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from Utils import *
 
+
 class Table_widget_zoom(QTableWidget):
     def __init__(self, parent, new_resize_to_content):
         QTableWidget.__init__(self, parent)
@@ -10,9 +11,6 @@ class Table_widget_zoom(QTableWidget):
         self.zoom_ratio = 1
         self.resize_to_content = new_resize_to_content
         self.ctrlhold = False
-
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
 
     def wheelEvent(self, event):
         if QGuiApplication.queryKeyboardModifiers() == Qt.ControlModifier:
