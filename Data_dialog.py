@@ -6,6 +6,7 @@ import locale
 from Combo_no_wheel import *
 from Table_widget_zoom import *
 
+
 class Connection(QObject):
     send_table = Signal(dict)
 
@@ -232,11 +233,11 @@ class Data_dialog(QDialog):
                 for y in range(len(self.table)):
                     value = Utils.clear_separators(self.table[y][i])
                     try:
-                        my_list.append(float(value))
+                        my_list.append(int(value))
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0}, value ".format(i + 1) + str(self.table[y][i]) + " must be numeric")
                         return
                 final_data["Sells"].append(my_list)
 
@@ -255,7 +256,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0}, value ".format(i + 1) + str(self.table[y][i]) + " must be numeric")
                         return
                 final_data["Stock"] = my_list
 
@@ -268,7 +269,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0}, value ".format(i + 1) + str(self.table[y][i]) + " must be numeric")
                         return
                 final_data["Buyprice"] = my_list
 
@@ -281,7 +282,7 @@ class Data_dialog(QDialog):
                     except ValueError:
                         self.table = table_save.copy()
                         self.list_rows_button.reverse()
-                        self.label_error.setText("Column {0} must be numeric".format(i + 1))
+                        self.label_error.setText("Column {0}, value ".format(i + 1) + str(self.table[y][i]) + " must be numeric")
                         return
                 final_data["Sellprice"] = my_list
 

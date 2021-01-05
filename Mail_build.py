@@ -180,10 +180,16 @@ class Mail_build(QDialog):
     def edit_clicked(self):
         self.toggle_side()
 
+        self.text_header.blockSignals(True)
+        self.text_body.blockSignals(True)
+        self.text_foot.blockSignals(True)
         if self.is_side_display:
             self.text_header.setText(self.mail_pattern_list[self.mail_profile]["header"])
             self.text_body.setText(self.mail_pattern_list[self.mail_profile]["body"])
             self.text_foot.setText(self.mail_pattern_list[self.mail_profile]["foot"])
+        self.text_header.blockSignals(False)
+        self.text_body.blockSignals(False)
+        self.text_foot.blockSignals(False)
 
     def toggle_side(self):
         if self.is_side_display:

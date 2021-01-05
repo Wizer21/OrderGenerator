@@ -119,10 +119,14 @@ class Utils:
     def clear_separators(value_str):
         if value_str == "":
             return "0"
+        if len(value_str) > 3:
+            test = 0
         value_str = value_str.replace("€", "")
         value_str = value_str.replace("$", "")
         value_str = value_str.replace("£", "")
         value_str = value_str.replace(",", ".")
+        value_str = value_str.replace(" ", "")
+        value_str = value_str.replace(" ", "")
         value_str = value_str.replace(win_separator, ".")
         return value_str
 

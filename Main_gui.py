@@ -276,12 +276,12 @@ class Main_gui(QMainWindow):
             if self.show_sellp:
                 self.build_sell_price(i, column)
                 column += 1
-            self.build_headers(sells_count)
+            self.build_average(i)
+            self.build_tobuy(i)
 
-            self.calc_average(i)
-            self.calc_to_buy(i)
-            self.table_widget_main.resizeColumnsToContents()
-            self.table_widget_main.resizeRowsToContents()
+        self.build_headers(sells_count)
+        self.table_widget_main.resizeColumnsToContents()
+        self.table_widget_main.resizeRowsToContents()
 
     def build_ref(self, i, column):
         ref = QTableWidgetItem(self.item_list[i].reference)
@@ -300,10 +300,7 @@ class Main_gui(QMainWindow):
     def build_sells(self, i, column):
         for y in range(len(self.item_list[i].sells_history)):  # FILL SELLS COLUMN
             val = self.item_list[i].sells_history[y]
-            if val == 0:
-                sells = QTableWidgetItem(Utils.float_to_str(val))
-            else:
-                sells = TableWidgetItem(Utils.float_to_str(val))
+            sells = TableWidgetItem(Utils.float_to_str(val))
 
             sells.setBackgroundColor(QColor(self.color_dict["Sells"]))
             sells.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
@@ -345,7 +342,7 @@ class Main_gui(QMainWindow):
         headers.append("To Buy")
         self.table_widget_main.setHorizontalHeaderLabels(headers)
 
-    def calc_average(self, i):
+    def build_average(self, i):
         calc_month = self.used_month
 
         if self.month_count < calc_month:
@@ -365,16 +362,14 @@ class Main_gui(QMainWindow):
         else:
             average = round(average, 2)
 
-        if average == 0:
-            value = QTableWidgetItem(Utils.float_to_str(average))
-        else:
-            value = TableWidgetItem(Utils.float_to_str(average))
+        value = TableWidgetItem(Utils.float_to_str(average))
 
+        self.item_list[i].table_item_average = value
         value.setBackgroundColor(QColor(self.color_dict["Average"]))
         value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
         self.table_widget_main.setItem(i, self.column_count - 2, value)
 
-    def calc_to_buy(self, i):
+    def build_tobuy(self, i):
         to_buy = (self.item_list[i].monthly_sells * self.sustain_value) - self.item_list[i].stock
         if 0 < to_buy < 1:
             to_buy = round(to_buy, 2)
@@ -383,12 +378,10 @@ class Main_gui(QMainWindow):
         else:
             to_buy = int(to_buy)
 
-        if to_buy == 0:
-            value = QTableWidgetItem(Utils.float_to_str(to_buy))
-        else:
-            value = TableWidgetItem(Utils.float_to_str(to_buy))
+        value = TableWidgetItem(Utils.float_to_str(to_buy))
 
         self.item_list[i].to_buy = round(to_buy, 1)
+        self.item_list[i].table_item_tosell = value
         value.setBackgroundColor(QColor(self.color_dict["ToBuy"]))
         value.setFlags(Qt.ItemIsSelectable and Qt.ItemIsEnabled)
         self.table_widget_main.setItem(i, self.column_count - 1, value)
@@ -399,8 +392,8 @@ class Main_gui(QMainWindow):
         self.sustain_value = val
         self.label_sustain_wanted.setText("Buy for {0} month(s)".format(str(self.sustain_value)))
         if len(self.item_list) != 0:
-            for i in range(len(self.item_list)):
-                self.calc_to_buy(i)
+            for i in self.item_list:
+                i.calc_tobuy(val)
             self.refresh_prices_values()
 
     @Slot(str)
@@ -408,9 +401,11 @@ class Main_gui(QMainWindow):
         self.used_month = int(value)
         self.label_based_month.setText("Based on last {0} month(s)".format(str(self.used_month)))
         if len(self.item_list) != 0:
-            for i in range(len(self.item_list)):
-                self.calc_average(i)
-                self.calc_to_buy(i)
+            calc_month = self.used_month
+            if self.month_count < self.used_month:
+                calc_month = self.month_count
+            for i in self.item_list:
+                i.calc_average(calc_month, self.sustain_value)
             self.refresh_prices_values()
 
     @Slot()
@@ -638,23 +633,23 @@ class Main_gui(QMainWindow):
         Utils.resize_and_color_font(self.label_display_sellP, 2, self.color_dict["Sellp"])
         Utils.resize_and_color_font(self.label_display_margin, 2, self.color_dict["ToBuy"])
 
-    def save_default_sorting(self):
-        self.default_sorting = {
-            "prev_sort": self.table_widget_main.horizontalHeader().sortIndicatorSection(),
-            "prev_order": self.table_widget_main.horizontalHeader().sortIndicatorOrder()
-        }
-
-    def save_user_sorting(self):
-        self.user_sorting = {
-            "prev_sort": self.table_widget_main.horizontalHeader().sortIndicatorSection(),
-            "prev_order": self.table_widget_main.horizontalHeader().sortIndicatorOrder()
-        }
-
-    def load_default_sorting(self):
-        self.table_widget_main.sortItems(self.default_sorting["prev_sort"], self.default_sorting["prev_order"])
-
-    def load_user_sorting(self):
-        self.table_widget_main.sortItems(self.user_sorting["prev_sort"], self.user_sorting["prev_order"])
+    # def save_default_sorting(self):
+    #     self.default_sorting = {
+    #         "prev_sort": self.table_widget_main.horizontalHeader().sortIndicatorSection(),
+    #         "prev_order": self.table_widget_main.horizontalHeader().sortIndicatorOrder()
+    #     }
+    #
+    # def save_user_sorting(self):
+    #     self.user_sorting = {
+    #         "prev_sort": self.table_widget_main.horizontalHeader().sortIndicatorSection(),
+    #         "prev_order": self.table_widget_main.horizontalHeader().sortIndicatorOrder()
+    #     }
+    #
+    # def load_default_sorting(self):
+    #     self.table_widget_main.sortItems(self.default_sorting["prev_sort"], self.default_sorting["prev_order"])
+    #
+    # def load_user_sorting(self):
+    #     self.table_widget_main.sortItems(self.user_sorting["prev_sort"], self.user_sorting["prev_order"])
 
     def closeEvent(self, event):
         self.save_settings()
