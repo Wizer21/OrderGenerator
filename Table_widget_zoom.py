@@ -41,4 +41,3 @@ class Table_widget_zoom(QTableWidget):
         if self.resize_to_content:
             self.resizeColumnsToContents()
             self.resizeRowsToContents()
-
