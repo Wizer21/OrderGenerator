@@ -66,13 +66,14 @@ class Main_gui(QMainWindow):
         self.table_widget_main = Table_widget_zoom(self, True)
         self.headers = self.table_widget_main.horizontalHeader()
 
-        self.build()
         self.load_settings()
+        self.build()
         self.load_tables()
         if len(self.item_list) != 0:
             self.build_table()
             self.refresh_prices_values()
 
+        self.update_displayed_settings()
         Utils.resize_from_resolution(self, 0.6, 0.6)
         self.set_foot_color()
 
@@ -436,7 +437,6 @@ class Main_gui(QMainWindow):
                 self.show_ref = settings["showref"]
                 self.show_buyp = settings["showbuy"]
                 self.show_sellp = settings["showsell"]
-                self.update_displayed_settings()
         except FileNotFoundError:  # DEFAULT SETTINGS
             self.save_settings()
 

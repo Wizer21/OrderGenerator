@@ -165,7 +165,7 @@ class Mail_build(QDialog):
         body = self.mail_pattern_list[self.mail_profile]["body"]
 
         for i in self.item_list:
-            if i.to_buy > 1:
+            if i.to_buy >= 1:
                 new_body = body
 
                 new_body = new_body.replace("<r>", i.reference)
